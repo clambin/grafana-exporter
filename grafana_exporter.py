@@ -2,6 +2,7 @@ import os
 from pathlib import Path
 import logging
 import requests
+import argparse
 from slugify import slugify
 import json
 import yaml
@@ -72,6 +73,8 @@ class GrafanaDBExporter:
         }
         for source in self._call('/api/datasources'):
             if (datasource := self._call(f'/api/datasources/{source["id"]}')) is not None:
+                if datasource['type'] == 'postgres':
+                    datasource['secureJsonData'] = {'password': 'CHANGEME'}
                 datasources['datasources'].append(datasource)
         return datasources
 
@@ -87,9 +90,9 @@ class GrafanaDBExporter:
     def _get_dashboard_folders(self, folders):
         ids = dict()
         for folder in self._call('/api/folders'):
-            if folder['title'] in folders:
+            if folders is None or folder['title'] in folders:
                 ids[folder['title']] = folder['id']
-        if 'General' in folders:
+        if folders is None or 'General' in folders:
             ids['General'] = 0
         return ids
 
@@ -148,12 +151,45 @@ class GrafanaDBExporter:
             )
 
 
+def str2bool(v):
+    if isinstance(v, bool):
+        return v
+    if v.lower() in ('yes', 'true', 't', 'y', '1'):
+        return True
+    elif v.lower() in ('no', 'false', 'f', 'n', '0'):
+        return False
+    else:
+        raise argparse.ArgumentTypeError('Boolean value expected.')
+
+
+def get_configuration(args=None):
+    parser = argparse.ArgumentParser()
+    parser.add_argument('--url', type=str, required=True,
+                        help=f'Grafana URL')
+    parser.add_argument('--api-key', type=str, required=True,
+                        help=f'Grafana API key')
+    parser.add_argument('--outdir', type=str, default='.',
+                        help='Output directory (default: current directory)')
+    parser.add_argument('--direct', type=str2bool, default=True,
+                        help='Export data in direct yaml/json format')
+    parser.add_argument('--configmap', type=str2bool, default=True,
+                        help='Export data as K8S ConfigMaps')
+    parser.add_argument('--dashboard-folders', type=str,
+                        help='Comma-separared list of dashboard folders to export')
+    return parser.parse_args(args)
+
+
 if __name__ == '__main__':
     logging.basicConfig(format='%(asctime)s - %(levelname)s - %(message)s', datefmt='%Y-%m-%d %H:%M:%S',
                         level=logging.INFO)
-    api_key = 'eyJrIjoiRXVEcTNFQm0zb0JXMWNGNnhEOHJjandFOFptTTlzNUwiLCJuIjoiZ3JhZmFuYV9leHBvcnRlciIsImlkIjoxfQ=='
-    exporter = GrafanaDBExporter('http://grafana.192.168.0.11.nip.io', api_key)
-    exporter.export_datasources('datasources')
-    exporter.export_dashboards('dashboards', ['General', 'system', 'media', 'covid'])
-    exporter.export_datasources_configmap('k8s')
-    exporter.export_dashboards_configmap('k8s', ['General', 'system', 'media', 'covid'])
+
+    configuration = get_configuration()
+    dashboard_folders = configuration.dashboard_folders.split(',') if configuration.dashboard_folders else None
+
+    exporter = GrafanaDBExporter(configuration.url, configuration.api_key)
+    if configuration.direct:
+        exporter.export_datasources(f'{configuration.outdir}/datasources')
+        exporter.export_dashboards(f'{configuration.outdir}/dashboards', dashboard_folders)
+    if configuration.configmap:
+        exporter.export_datasources_configmap(f'{configuration.outdir}/k8s')
+        exporter.export_dashboards_configmap(f'{configuration.outdir}/k8s', dashboard_folders)
