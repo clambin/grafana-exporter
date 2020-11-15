@@ -189,6 +189,7 @@ if __name__ == '__main__':
     dashboard_folders = configuration.dashboard_folders.split(',') if configuration.dashboard_folders else None
 
     exporter = GrafanaDBExporter(configuration.url, configuration.api_key)
+
     if configuration.direct:
         exporter.export_datasources(f'{configuration.outdir}/datasources')
         exporter.export_dashboards(f'{configuration.outdir}/dashboards', dashboard_folders)
