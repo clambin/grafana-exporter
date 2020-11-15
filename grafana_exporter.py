@@ -133,7 +133,9 @@ class GrafanaDBExporter:
                 logging.info(f'Exporting {foldername}/{title}')
                 GrafanaDBExporter._save_json(os.path.join(directory, foldername, f'{title}.json'), dashboard)
 
-    def export_dashboards_configmap(self, directory, folders, name='grafana-provisioning-dashboards', namespace='monitoring'):
+    def export_dashboards_configmap(self, directory, folders,
+                                    name='grafana-provisioning-dashboards',
+                                    namespace='monitoring'):
         configmap = GrafanaDBExporter._build_configmap(
             {'dashboards.yml': GrafanaDBExporter._get_dashboard_provisioning('my dashboards')},
             name, namespace
@@ -165,9 +167,9 @@ def str2bool(v):
 def get_configuration(args=None):
     parser = argparse.ArgumentParser()
     parser.add_argument('--url', type=str, required=True,
-                        help=f'Grafana URL')
+                        help='Grafana URL')
     parser.add_argument('--api-key', type=str, required=True,
-                        help=f'Grafana API key')
+                        help='Grafana API key')
     parser.add_argument('--outdir', type=str, default='.',
                         help='Output directory (default: current directory)')
     parser.add_argument('--direct', type=str2bool, default=True,
