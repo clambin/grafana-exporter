@@ -6,7 +6,7 @@ verify_ssl = true
 [dev-packages]
 flake8 = "*"
 bandit = "*"
-sanity = "*"
+safety = "*"
 
 [packages]
 requests = "*"
