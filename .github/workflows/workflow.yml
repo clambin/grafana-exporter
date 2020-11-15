@@ -61,7 +61,7 @@ jobs:
       run: echo "::set-output name=sha_short::sha-$(echo ${GITHUB_SHA} | cut -c1-7)"
     - uses: Azure/k8s-deploy@v1
       with:
-        namespace: default
+        # namespace: monitoring
         manifests: |
           manifests/grafana-exporter-deployment.yml
         images: |
