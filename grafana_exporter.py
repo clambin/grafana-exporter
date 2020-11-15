@@ -181,11 +181,17 @@ def get_configuration(args=None):
     return parser.parse_args(args)
 
 
+def print_configuration(config):
+    return ', '.join([f'{key}={val}' for key, val in vars(config).items()])
+
+
 if __name__ == '__main__':
     logging.basicConfig(format='%(asctime)s - %(levelname)s - %(message)s', datefmt='%Y-%m-%d %H:%M:%S',
                         level=logging.INFO)
 
     configuration = get_configuration()
+    logging.info(f'Configuration: {print_configuration(configuration)}')
+
     dashboard_folders = configuration.dashboard_folders.split(',') if configuration.dashboard_folders else None
 
     exporter = GrafanaDBExporter(configuration.url, configuration.api_key)
