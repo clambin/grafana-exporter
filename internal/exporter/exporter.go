@@ -1,6 +1,7 @@
 package exporter
 
 import (
+	log "github.com/sirupsen/logrus"
 	"grafana_exporter/internal/configmap"
 	"grafana_exporter/internal/grafana"
 	"io/ioutil"
@@ -31,7 +32,9 @@ func ExportDatasources(url, apiToken, directory, namespace string) error {
 	if datasources, err = grafana.GetDatasources(url, apiToken); err == nil {
 		if folderName, configMap, err = configmap.Serialize(
 			"grafana-provisioning-datasources", namespace, datasources); err == nil {
-			writeFile(directory, folderName+".yml", configMap)
+			filename := folderName + ".yml"
+			writeFile(directory, filename, configMap)
+			log.Info("exported datasource provisioning file " + filename)
 		}
 	}
 	return err
@@ -57,6 +60,7 @@ func ExportDashboards(url, apiToken, directory, namespace string) error {
 	// write provisioning file
 	if _, content, err := serializeDashboardProvisioning(namespace); err == nil {
 		writeFile(directory, "grafana-provisioning-dashboards.yml", content)
+		log.Info("exported dashboard file grafana-provisioning-dashboards.yml")
 	}
 	// get dashboards by folder
 	if folders, err = grafana.GetAllDashboards(url, apiToken); err == nil {
@@ -64,10 +68,14 @@ func ExportDashboards(url, apiToken, directory, namespace string) error {
 		for folder, dashboards = range folders {
 			if folderName, configMap, err = configmap.Serialize(
 				"grafana-dashboards-"+folder, namespace, dashboards); err == nil {
-				writeFile(directory, folderName+".yml", configMap)
+				filename := folderName + ".yml"
+				writeFile(directory, filename, configMap)
+				log.Info("exported dashboard file " + filename)
+
 			} else {
 				break
 			}
+
 		}
 	}
 	return err
