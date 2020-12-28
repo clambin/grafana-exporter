@@ -8,12 +8,13 @@ ARG BUILD_VERSION=develop
 RUN CGO_ENABLED=0 go build -ldflags "-X covid19/internal/version.BuildVersion=$BUILD_VERSION" cmd/grafana_exporter/grafana_exporter.go
 
 
-FROM alpine:git:latest
+FROM alpine:latest
 
 WORKDIR /app
 
 RUN addgroup -g 1000 abc && \
     adduser --uid 1000 abc abc && \
+    apk add git
 
 COPY --from=builder /build/grafana_exporter .
 COPY --from=builder /build/init/grafana_exporter.sh .
