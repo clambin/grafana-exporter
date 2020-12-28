@@ -14,8 +14,7 @@ WORKDIR /app
 
 RUN apk update && \
     apk add git
-RUN addgroup -g 1000 abc && \
-    adduser --uid 1000 abc abc
+RUN adduser abc
 
 
 COPY --from=builder /build/grafana_exporter .
