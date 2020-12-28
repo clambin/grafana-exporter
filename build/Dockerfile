@@ -21,5 +21,5 @@ COPY --from=builder /build/grafana-exporter .
 COPY --from=builder /build/init/grafana-exporter.sh .
 
 USER abc
-ENTRYPOINT ["/app/grafana_exporter.sh"]
+ENTRYPOINT ["/app/grafana-exporter.sh"]
 CMD []
