@@ -10,24 +10,22 @@ import (
 
 // Exporter exports all required data from Grafana to disk
 type Exporter struct {
-	url       string
-	apiToken  string
 	directory string
 	namespace string
+	client    *grafana.Client
 	write     func(string, string, []byte)
 }
 
 // New creates a new Exporter
 func New(url, apiToken, directory, namespace string) *Exporter {
-	return NewWithLogger(url, apiToken, directory, namespace, writeFile)
+	return NewExtended(grafana.New(url, apiToken), directory, namespace, writeFile)
 }
 
 // NewWithLogger creates a new Exporter with configured Logger
 // Used in unit tests to test what was written to disk
-func NewWithLogger(url, apiToken, directory, namespace string, writeFunc func(string, string, []byte)) *Exporter {
+func NewExtended(client *grafana.Client, directory, namespace string, writeFunc func(string, string, []byte)) *Exporter {
 	return &Exporter{
-		url:       url,
-		apiToken:  apiToken,
+		client:    client,
 		directory: directory,
 		namespace: namespace,
 		write:     writeFunc,
@@ -55,7 +53,7 @@ func (exporter *Exporter) ExportDatasources() error {
 		configMap   []byte
 	)
 
-	if datasources, err = grafana.GetDatasources(exporter.url, exporter.apiToken); err == nil {
+	if datasources, err = exporter.client.GetDatasources(); err == nil {
 		if folderName, configMap, err = configmap.Serialize(
 			"grafana-provisioning-datasources", exporter.namespace, datasources); err == nil {
 			filename := folderName + ".yml"
@@ -89,7 +87,7 @@ func (exporter *Exporter) ExportDashboards() error {
 		log.Info("exported dashboard file grafana-provisioning-dashboards.yml")
 	}
 	// get dashboards by folder
-	if folders, err = grafana.GetAllDashboards(exporter.url, exporter.apiToken); err == nil {
+	if folders, err = exporter.client.GetAllDashboards(); err == nil {
 		// write each folder in separate configmap
 		for folder, dashboards = range folders {
 			if folderName, configMap, err = configmap.Serialize(

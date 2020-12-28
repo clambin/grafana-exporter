@@ -10,6 +10,28 @@ import (
 	"net/http"
 )
 
+// Client to call Grafana APIs
+type Client struct {
+	apiClient *http.Client
+	url       string
+	apiToken  string
+}
+
+// New creates a new Client
+func New(url, apiToken string) *Client {
+	return NewWithHTTPClient(url, apiToken, sdk.DefaultHTTPClient)
+}
+
+// NewWithHTTPClient creates a Client with a specified http.Client
+// Used to stub API calls during unit testing
+func NewWithHTTPClient(url, apiToken string, httpClient *http.Client) *Client {
+	return &Client{
+		url:       url,
+		apiToken:  apiToken,
+		apiClient: httpClient,
+	}
+}
+
 // GetAllDashboards retrieves all dashboards in Grafana.
 // Dashboards may be located in folders.  GetAllDashboards therefore returns
 // a map of folders, each of which holds a map of dashboards with their filename
@@ -25,13 +47,7 @@ import (
 // +-> folder-2
 //     +-> dashboard-2.json -> json model of dashboard 2
 //     +-> dashboard-3.json -> json model of dashboard 3
-func GetAllDashboards(url, apiToken string) (map[string]map[string]string, error) {
-	return GetAllDashboardsWithHTTPClient(url, apiToken, sdk.DefaultHTTPClient)
-}
-
-// GetAllDashboardsWithHTTPClient uses the specified http.Client to call the Grafana APIs
-// Used in unit testing to stub the API calls
-func GetAllDashboardsWithHTTPClient(url, apiToken string, client *http.Client) (map[string]map[string]string, error) {
+func (client *Client) GetAllDashboards() (map[string]map[string]string, error) {
 	var (
 		err         error
 		foundBoards []sdk.FoundBoard
@@ -40,7 +56,7 @@ func GetAllDashboardsWithHTTPClient(url, apiToken string, client *http.Client) (
 	result := make(map[string]map[string]string)
 
 	ctx := context.Background()
-	c := sdk.NewClient(url, apiToken, client)
+	c := sdk.NewClient(client.url, client.apiToken, client.apiClient)
 
 	// Get all dashboards
 	if foundBoards, err = c.Search(ctx, sdk.SearchType(sdk.SearchTypeDashboard)); err == nil {
@@ -75,13 +91,7 @@ func GetAllDashboardsWithHTTPClient(url, apiToken string, client *http.Client) (
 // GetDatasources retrieves all datasources in Grafana.
 // For simplicity, we'll store these in one config file 'datasources.yml'
 // So the returning map will only have one element.
-func GetDatasources(url, apiToken string) (map[string]string, error) {
-	return GetDatasourcesWithHTTPClient(url, apiToken, sdk.DefaultHTTPClient)
-}
-
-// GetDatasourcesWithHTTPClient uses the specified http.Client to call the Grafana APIs
-// Used in unit testing to stub the API calls
-func GetDatasourcesWithHTTPClient(url, apiToken string, client *http.Client) (map[string]string, error) {
+func (client *Client) GetDatasources() (map[string]string, error) {
 	var (
 		err         error
 		datasources []sdk.Datasource
@@ -89,7 +99,7 @@ func GetDatasourcesWithHTTPClient(url, apiToken string, client *http.Client) (ma
 	)
 	result := make(map[string]string)
 	ctx := context.Background()
-	c := sdk.NewClient(url, apiToken, client)
+	c := sdk.NewClient(client.url, client.apiToken, client.apiClient)
 
 	if datasources, err = c.GetAllDatasources(ctx); err == nil {
 		// datasource provisioning uses apiVersion / datasources layout

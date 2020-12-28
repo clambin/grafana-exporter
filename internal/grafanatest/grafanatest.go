@@ -1,47 +1,19 @@
-package grafana_test
+package grafanatest
 
 import (
 	"bytes"
+	"github.com/clambin/httpstub"
+	"grafana_exporter/internal/grafana"
 	"io/ioutil"
 	"net/http"
-	"testing"
-
-	"github.com/clambin/httpstub"
-	"github.com/stretchr/testify/assert"
-
-	"grafana_exporter/internal/grafana"
 )
 
-func TestGetDashboardFolders(t *testing.T) {
-	var (
-		dashboardMap map[string]map[string]string
-		folder       map[string]string
-		content      string
-		ok           bool
-		err          error
-	)
-
-	dashboardMap, err = grafana.GetAllDashboardsWithHTTPClient(
+func NewWithHTTPClient() *grafana.Client {
+	return grafana.NewWithHTTPClient(
 		"http://example.com",
 		"",
 		httpstub.NewTestClient(loopback),
 	)
-
-	if assert.Nil(t, err) {
-		assert.Len(t, dashboardMap, 2)
-		folder, ok = dashboardMap["General"]
-		assert.True(t, ok)
-		assert.Len(t, folder, 1)
-		content, ok = folder["db-0-1.json"]
-		assert.True(t, ok)
-		assert.Equal(t, `"dashboard 2"`, content)
-		folder, ok = dashboardMap["folder1"]
-		assert.True(t, ok)
-		assert.Len(t, folder, 1)
-		content, ok = folder["db-1-1.json"]
-		assert.True(t, ok)
-		assert.Equal(t, `"dashboard 1"`, content)
-	}
 }
 
 func loopback(req *http.Request) *http.Response {
@@ -61,8 +33,12 @@ func loopback(req *http.Request) *http.Response {
 			StatusCode: http.StatusOK,
 			Body:       ioutil.NopCloser(bytes.NewBufferString(dashboard2)),
 		}
+	case "/api/datasources":
+		return &http.Response{
+			StatusCode: http.StatusOK,
+			Body:       ioutil.NopCloser(bytes.NewBufferString(allDatasources)),
+		}
 	}
-
 	return &http.Response{
 		StatusCode: http.StatusNotFound,
 	}
@@ -111,4 +87,58 @@ var (
 
 	dashboard1 = `{ "dashboard": "dashboard 1"}`
 	dashboard2 = `{ "dashboard": "dashboard 2"}`
+
+	allDatasources = `[
+  {
+    "id": 5,
+    "orgId": 1,
+    "name": "foo",
+    "type": "grafana-simple-json-datasource",
+    "typeLogoUrl": "public/plugins/grafana-simple-json-datasource/img/simpleJson_logo.svg",
+    "access": "proxy",
+    "url": "http://example.com:5000",
+    "password": "",
+    "user": "",
+    "database": "",
+    "basicAuth": false,
+    "isDefault": false,
+    "jsonData": {},
+    "readOnly": true
+  },
+  {
+    "id": 3,
+    "orgId": 1,
+    "name": "bar",
+    "type": "postgres",
+    "typeLogoUrl": "public/app/plugins/datasource/postgres/img/postgresql_logo.svg",
+    "access": "proxy",
+    "url": "http://postgres.default:5432",
+    "password": "",
+    "user": "grafana",
+    "database": "bar",
+    "basicAuth": false,
+    "isDefault": false,
+    "jsonData": {
+      "postgresVersion": 1200,
+      "sslmode": "disable"
+    },
+    "readOnly": true
+  },
+  {
+    "id": 7,
+    "orgId": 1,
+    "name": "Prometheus",
+    "type": "prometheus",
+    "typeLogoUrl": "public/app/plugins/datasource/prometheus/img/prometheus_logo.svg",
+    "access": "proxy",
+    "url": "http://monitoring-prometheus-server.monitoring.svc:80",
+    "password": "",
+    "user": "",
+    "database": "",
+    "basicAuth": false,
+    "isDefault": true,
+    "jsonData": {},
+    "readOnly": true
+  }
+]`
 )
