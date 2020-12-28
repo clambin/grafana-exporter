@@ -13,9 +13,9 @@ FROM alpine:latest
 WORKDIR /app
 
 RUN apk update && \
-    apk add git
-RUN adduser abc
-
+    apk add git && \
+    addgroup -g 1000 abc && \
+    adduser -u 1000 -G abc -h /home/abc -D abc
 
 COPY --from=builder /build/grafana_exporter .
 COPY --from=builder /build/init/grafana_exporter.sh .
