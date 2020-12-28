@@ -73,7 +73,7 @@ func GetAllDashboardsWithHTTPClient(url, apiToken string, client *http.Client) (
 }
 
 // GetDatasources retrieves all datasources in Grafana.
-// For simplicity, we'll store these in one config file 'datasources.yaml'
+// For simplicity, we'll store these in one config file 'datasources.yml'
 // So the returning map will only have one element.
 func GetDatasources(url, apiToken string) (map[string]string, error) {
 	return GetDatasourcesWithHTTPClient(url, apiToken, sdk.DefaultHTTPClient)

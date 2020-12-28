@@ -1,6 +1,7 @@
 package configmap
 
 import (
+	"bytes"
 	"github.com/gosimple/slug"
 	"gopkg.in/yaml.v3"
 )
@@ -27,7 +28,11 @@ func Serialize(name, namespace string, files map[string]string) (string, []byte,
 			metadata{mapName, namespace},
 			files,
 		}
+		b bytes.Buffer
 	)
-	output, err := yaml.Marshal(configmap)
-	return mapName, output, err
+
+	encoder := yaml.NewEncoder(&b)
+	encoder.SetIndent(2)
+	err := encoder.Encode(configmap)
+	return mapName, b.Bytes(), err
 }

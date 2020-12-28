@@ -9,14 +9,14 @@ import (
 const expected = `kind: ConfigMap
 apiVersion: v1
 metadata:
-    name: foo
-    namespace: bar
+  name: foo
+  namespace: bar
 data:
-    file-1.json: Hello world
-    file-2.json: |-
-        multi
-        line
-        content
+  file-1.json: Hello world
+  file-2.json: |-
+    multi
+    line
+    content
 `
 
 func TestSerialize(t *testing.T) {

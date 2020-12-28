@@ -31,7 +31,7 @@ func ExportDatasources(url, apiToken, directory, namespace string) error {
 	if datasources, err = grafana.GetDatasources(url, apiToken); err == nil {
 		if folderName, configMap, err = configmap.Serialize(
 			"grafana-provisioning-datasources", namespace, datasources); err == nil {
-			writeFile(directory, folderName+".yaml", configMap)
+			writeFile(directory, folderName+".yml", configMap)
 		}
 	}
 	return err
@@ -56,7 +56,7 @@ func ExportDashboards(url, apiToken, directory, namespace string) error {
 
 	// write provisioning file
 	if _, content, err := serializeDashboardProvisioning(namespace); err == nil {
-		writeFile(directory, "grafana-provisioning-dashboards.yaml", content)
+		writeFile(directory, "grafana-provisioning-dashboards.yml", content)
 	}
 	// get dashboards by folder
 	if folders, err = grafana.GetAllDashboards(url, apiToken); err == nil {
@@ -64,7 +64,7 @@ func ExportDashboards(url, apiToken, directory, namespace string) error {
 		for folder, dashboards = range folders {
 			if folderName, configMap, err = configmap.Serialize(
 				"grafana-dashboards-"+folder, namespace, dashboards); err == nil {
-				writeFile(directory, folderName+".yaml", configMap)
+				writeFile(directory, folderName+".yml", configMap)
 			} else {
 				break
 			}
@@ -88,7 +88,7 @@ func serializeDashboardProvisioning(namespace string) (string, []byte, error) {
 `
 	return configmap.Serialize(
 		"grafana-dashboard-provisioning", namespace,
-		map[string]string{"dashboards.yaml": dashboardProvisioning})
+		map[string]string{"dashboards.yml": dashboardProvisioning})
 }
 
 func writeFile(directory, filename string, content []byte) {
