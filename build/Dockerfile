@@ -13,7 +13,7 @@ FROM alpine:latest
 WORKDIR /app
 
 RUN apk update && \
-    RUN apk add git
+    apk add git
 RUN addgroup -g 1000 abc && \
     adduser --uid 1000 abc abc
 
