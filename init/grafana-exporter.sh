@@ -20,11 +20,6 @@ if [ -z "$GIT_TOKEN" ]; then
 	exit 1
 fi
 
-if [ -z "$GRAFANA_FOLDERS" ]; then
-	echo Missing GRAFANA_FOLDERS env var
-	exit 1
-fi
-
 if [ -z "$GRAFANA_URL" ]; then
 	echo Missing GRAFANA_URL env var
 	exit 1
@@ -41,9 +36,9 @@ git config --global user.name "$GIT_FULL_NAME" || exit 1
 TMPDIR=$(mktemp -d)
 git clone https://"$GIT_USER":"$GIT_TOKEN"@github.com/clambin/gitops.git "$TMPDIR" || exit 1
 
-/app/grafana-exporter --outdir="$TMPDIR"/config/monitoring/grafana \
+/app/grafana-exporter --out="$TMPDIR"/config/monitoring/grafana \
 	--url="$GRAFANA_URL" \
-	--api-key="$GRAFANA_API_KEY" \
+	--token="$GRAFANA_API_KEY" \
 	--debug
 
 cd "$TMPDIR" && \
