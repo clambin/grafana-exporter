@@ -50,7 +50,7 @@ jobs:
         file: ./build/Dockerfile
         platforms: linux/amd64,linux/arm/v7
         push: ${{ github.event_name != 'pull_request' }}
-        tags: ${{ steps.covid19mon_meta.outputs.tags }}
-        labels: ${{ steps.covid19mon_meta.outputs.labels }}
+        tags: ${{ steps.docker_meta.outputs.tags }}
+        labels: ${{ steps.docker_meta.outputs.labels }}
         build-args: |
-          BUILD_VERSION=${{ steps.covid19mon_meta.outputs.version }}
+          BUILD_VERSION=${{ steps.docker_meta.outputs.version }}
