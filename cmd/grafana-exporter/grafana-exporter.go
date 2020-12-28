@@ -14,7 +14,7 @@ func main() {
 
 	log.Info("grafana-exporter v" + version.BuildVersion)
 
-	err := exporter.Export(Configuration.url, Configuration.apiToken, Configuration.directory, Configuration.namespace)
+	err := exporter.New(Configuration.url, Configuration.apiToken, Configuration.directory, Configuration.namespace).Export()
 
 	if err != nil {
 		log.Warningf("failed to export: %s", err.Error())
