@@ -42,9 +42,9 @@ func TestGetDashboardFolders(t *testing.T) {
 
 	if assert.Nil(t, err) {
 		assert.Len(t, dashboardMap, 1)
-		folder, ok = dashboardMap["General"]
+		_, ok = dashboardMap["General"]
 		assert.False(t, ok)
-		folder, ok = dashboardMap["folder1"]
+		_, ok = dashboardMap["folder1"]
 		assert.True(t, ok)
 		assert.Len(t, folder, 1)
 		content, ok = folder["db-1-1.json"]

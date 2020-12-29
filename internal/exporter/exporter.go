@@ -48,7 +48,7 @@ func (exporter *Exporter) Export(exportedFolders []string) error {
 func (exporter *Exporter) ExportDatasources() error {
 	var (
 		err         error
-		datasources = make(map[string]string)
+		datasources map[string]string
 		folderName  string
 		configMap   []byte
 	)
