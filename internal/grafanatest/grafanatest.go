@@ -8,6 +8,8 @@ import (
 	"net/http"
 )
 
+// NewWithHTTPClient returns a Grafana Client bound to a stubbed HTTP Server
+// Used for unit testing
 func NewWithHTTPClient() *grafana.Client {
 	return grafana.NewWithHTTPClient(
 		"http://example.com",

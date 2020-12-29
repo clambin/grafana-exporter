@@ -26,15 +26,15 @@ git config --global user.name "$GIT_FULL_NAME" || exit 1
 TMPDIR=$(mktemp -d)
 git clone https://"$GIT_USER":"$GIT_TOKEN"@github.com/clambin/gitops.git "$TMPDIR" || exit 1
 
-/app/grafana-exporter --out "$TMPDIR" "$@" || exit 1
+cd "$TMPDIR"
+/app/grafana-exporter || exit 1
 
 if [ -z "$SKIP_COMMIT" ]; then
-  cd "$TMPDIR" && \
   git add -A && \
   git commit -m "Automated grafana export on $(date +'%Y-%m-%d %H:%M:%S')" &&
   git push
-  cd - >/dev/null || exit
   echo "Successfully synced grafana configuration with git"
 fi
 
+cd - >/dev/null || exit
 rm -rf "$TMPDIR"

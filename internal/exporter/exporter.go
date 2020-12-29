@@ -21,7 +21,7 @@ func New(url, apiToken, directory, namespace string) *Exporter {
 	return NewExtended(grafana.New(url, apiToken), directory, namespace, writeFile)
 }
 
-// NewWithLogger creates a new Exporter with configured Logger
+// NewExtended creates a new Exporter with provided Logger & Grafana Client
 // Used in unit tests to test what was written to disk
 func NewExtended(client *grafana.Client, directory, namespace string, writeFunc func(string, string, []byte)) *Exporter {
 	return &Exporter{
