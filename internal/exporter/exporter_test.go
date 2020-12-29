@@ -130,12 +130,12 @@ data:
       - name: 'dashboards'
         orgId: 1
         folder: ''
-        disableDeletion: False
-        updataIntervalSeconds': 10
-        allowUiUpdates': True
+        disableDeletion: false
+        updateIntervalSeconds': 3600
+        allowUiUpdates: true
         options:
-        - path: '/var/lib/grafana/dashboards'
-        - foldersFromFilesStructure: True
+          path: /dashboards
+          foldersFromFilesStructure: true
 `
 	general = `kind: ConfigMap
 apiVersion: v1

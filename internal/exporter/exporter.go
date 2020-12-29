@@ -115,7 +115,7 @@ func (exporter *Exporter) serializeDashboardProvisioning() (string, []byte, erro
     updateIntervalSeconds': 3600
     allowUiUpdates: true
     options:
-      path: '/dashboards'
+      path: /dashboards
       foldersFromFilesStructure: true
 `
 	return configmap.Serialize(
