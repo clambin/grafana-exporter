@@ -27,7 +27,7 @@ TMPDIR=$(mktemp -d)
 git clone https://"$GIT_USER":"$GIT_TOKEN"@github.com/clambin/gitops.git "$TMPDIR" || exit 1
 
 cd "$TMPDIR"
-/app/grafana-exporter || exit 1
+/app/grafana-exporter "$@" || exit 1
 
 if [ -z "$SKIP_COMMIT" ]; then
   git add -A && \
