@@ -36,7 +36,7 @@ git config --global user.name "$GIT_FULL_NAME" || exit 1
 TMPDIR=$(mktemp -d)
 git clone https://"$GIT_USER":"$GIT_TOKEN"@github.com/clambin/gitops.git "$TMPDIR" || exit 1
 
-/app/grafana-exporter --out="$TMPDIR"/config/monitoring/grafana \
+/app/grafana-exporter --out="$TMPDIR"/config/monitoring/grafana/exporter \
 	--url="$GRAFANA_URL" \
 	--token="$GRAFANA_API_KEY" \
 	--debug
