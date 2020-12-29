@@ -111,12 +111,12 @@ func (exporter *Exporter) serializeDashboardProvisioning() (string, []byte, erro
   - name: 'dashboards'
     orgId: 1
     folder: ''
-    disableDeletion: False
-    updataIntervalSeconds': 10
-    allowUiUpdates': True
+    disableDeletion: false
+    updateIntervalSeconds': 3600
+    allowUiUpdates: true
     options:
-    - path: '/var/lib/grafana/dashboards'
-    - foldersFromFilesStructure: True
+      path: '/dashboards'
+      foldersFromFilesStructure: true
 `
 	return configmap.Serialize(
 		"grafana-dashboard-provisioning", exporter.namespace,

@@ -6,7 +6,7 @@ import (
 	"gopkg.in/yaml.v3"
 )
 
-// Serialize creates a ConfigMap structure and serializes it into a byte sluce
+// Serialize creates a ConfigMap structure and serializes it into a byte slice
 // so we can store it in a yaml file
 func Serialize(name, namespace string, files map[string]string) (string, []byte, error) {
 	type metadata struct {
