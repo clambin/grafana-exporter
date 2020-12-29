@@ -30,7 +30,7 @@ cd "$TMPDIR"
 /app/grafana-exporter "$@" || exit 1
 
 if [ -z "$SKIP_COMMIT" ]; then
-  git add -A && \
+  git add -A &&
   git commit -m "Automated grafana export on $(date +'%Y-%m-%d %H:%M:%S')" &&
   git push
   echo "Successfully synced grafana configuration with git"
