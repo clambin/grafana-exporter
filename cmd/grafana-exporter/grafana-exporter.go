@@ -7,6 +7,7 @@ import (
 	"grafana_exporter/internal/version"
 	"os"
 	"path/filepath"
+	"strings"
 )
 
 func main() {
@@ -14,10 +15,11 @@ func main() {
 
 	log.Info("grafana-exporter v" + version.BuildVersion)
 
-	err := exporter.New(Configuration.url, Configuration.apiToken, Configuration.directory, Configuration.namespace).Export()
+	exp := exporter.New(Configuration.url, Configuration.apiToken, Configuration.directory, Configuration.namespace)
 
-	if err != nil {
+	if err := exp.Export(Configuration.folders); err != nil {
 		log.Warningf("failed to export: %s", err.Error())
+		os.Exit(1)
 	}
 }
 
@@ -28,9 +30,12 @@ var Configuration struct {
 	apiToken  string
 	directory string
 	namespace string
+	folders   []string
 }
 
 func getArguments() {
+	var folders string
+
 	a := kingpin.New(filepath.Base(os.Args[0]), "grafana provisioning exporter")
 	a.Version(version.BuildVersion)
 	a.HelpFlag.Short('h')
@@ -40,10 +45,15 @@ func getArguments() {
 	a.Flag("token", "Grafana API Token (must have admin access)").Short('t').Required().StringVar(&Configuration.apiToken)
 	a.Flag("out", "Output directory").Short('o').Default(".").StringVar(&Configuration.directory)
 	a.Flag("namespace", "K8s Namespace").Short('n').Default("monitoring").StringVar(&Configuration.namespace)
+	a.Flag("folders", "Comma-separated list of folders to export").Short('f').Default("").StringVar(&folders)
 
 	if _, err := a.Parse(os.Args[1:]); err != nil {
 		a.Usage(os.Args[1:])
 		os.Exit(1)
+	}
+
+	if folders != "" {
+		Configuration.folders = strings.Split(folders, ",")
 	}
 
 	if Configuration.debug {

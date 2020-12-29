@@ -19,7 +19,7 @@ func TestExporter(t *testing.T) {
 		dir,
 		"monitoring",
 		log.writeFile,
-	).Export()
+	).Export([]string{})
 
 	assert.Nil(t, err)
 	assert.Len(t, log.output, 1)

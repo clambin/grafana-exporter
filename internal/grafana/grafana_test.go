@@ -16,8 +16,9 @@ func TestGetDashboardFolders(t *testing.T) {
 		ok           bool
 		err          error
 	)
+	exportedFolders := make([]string, 0)
 
-	dashboardMap, err = grafanatest.NewWithHTTPClient().GetAllDashboards()
+	dashboardMap, err = grafanatest.NewWithHTTPClient().GetAllDashboards(exportedFolders)
 
 	if assert.Nil(t, err) {
 		assert.Len(t, dashboardMap, 2)
@@ -34,6 +35,23 @@ func TestGetDashboardFolders(t *testing.T) {
 		assert.True(t, ok)
 		assert.Equal(t, `"dashboard 1"`, content)
 	}
+
+	exportedFolders = []string{"folder1"}
+
+	dashboardMap, err = grafanatest.NewWithHTTPClient().GetAllDashboards(exportedFolders)
+
+	if assert.Nil(t, err) {
+		assert.Len(t, dashboardMap, 1)
+		folder, ok = dashboardMap["General"]
+		assert.False(t, ok)
+		folder, ok = dashboardMap["folder1"]
+		assert.True(t, ok)
+		assert.Len(t, folder, 1)
+		content, ok = folder["db-1-1.json"]
+		assert.True(t, ok)
+		assert.Equal(t, `"dashboard 1"`, content)
+	}
+
 }
 
 func TestGetDatasources(t *testing.T) {

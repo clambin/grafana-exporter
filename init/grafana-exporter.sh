@@ -20,34 +20,21 @@ if [ -z "$GIT_TOKEN" ]; then
 	exit 1
 fi
 
-if [ -z "$GRAFANA_URL" ]; then
-	echo Missing GRAFANA_URL env var
-	exit 1
-fi
-
-if [ -z "$GRAFANA_API_KEY" ]; then
-	echo Missing GRAFANA_API_KEY env var
-	exit 1
-fi
-
 git config --global user.email "$GIT_EMAIL" || exit 1
 git config --global user.name "$GIT_FULL_NAME" || exit 1
 
 TMPDIR=$(mktemp -d)
 git clone https://"$GIT_USER":"$GIT_TOKEN"@github.com/clambin/gitops.git "$TMPDIR" || exit 1
 
-/app/grafana-exporter --out="$TMPDIR"/config/monitoring/grafana/exporter \
-	--url="$GRAFANA_URL" \
-	--token="$GRAFANA_API_KEY" \
-	--debug
+/app/grafana-exporter --out "$TMPDIR" "$@" || exit 1
 
-cd "$TMPDIR" && \
-git add -A && \
-git commit -m "Automated grafana export on $(date +'%Y-%m-%d %H:%M:%S')" &&
-git push
+if [ -z "$SKIP_COMMIT" ]; then
+  cd "$TMPDIR" && \
+  git add -A && \
+  git commit -m "Automated grafana export on $(date +'%Y-%m-%d %H:%M:%S')" &&
+  git push
+  cd - >/dev/null || exit
+  echo "Successfully synced grafana configuration with git"
+fi
 
-# shellcheck disable=SC2164
-cd - > /dev/null
 rm -rf "$TMPDIR"
-
-echo "Successfully synced grafana configuration with git"

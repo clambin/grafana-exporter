@@ -33,11 +33,11 @@ func NewExtended(client *grafana.Client, directory, namespace string, writeFunc 
 }
 
 // Export writes all dashboard & datasource provisioning files to disk
-func (exporter *Exporter) Export() error {
+func (exporter *Exporter) Export(exportedFolders []string) error {
 	var err error
 
-	if err = exporter.ExportDashboards(); err == nil {
-		err = exporter.ExportDatasources()
+	if err = exporter.ExportDatasources(); err == nil {
+		err = exporter.ExportDashboards(exportedFolders)
 	}
 	return err
 
@@ -54,9 +54,11 @@ func (exporter *Exporter) ExportDatasources() error {
 	)
 
 	if datasources, err = exporter.client.GetDatasources(); err == nil {
+		log.Debug(datasources)
 		if folderName, configMap, err = configmap.Serialize(
 			"grafana-provisioning-datasources", exporter.namespace, datasources); err == nil {
 			filename := folderName + ".yml"
+			log.Debug(exporter.directory, filename)
 			exporter.write(exporter.directory, filename, configMap)
 			log.Info("exported datasource provisioning file " + filename)
 		}
@@ -71,7 +73,7 @@ func (exporter *Exporter) ExportDatasources() error {
 // Inside the cluster, we mount each config map in a directory per folder. Using
 // 'foldersFromFilesStructure: True' inside the dashboard provisioning file then
 // respects that folder structure within Grafana
-func (exporter *Exporter) ExportDashboards() error {
+func (exporter *Exporter) ExportDashboards(exportedFolders []string) error {
 	var (
 		err        error
 		folder     string
@@ -87,7 +89,7 @@ func (exporter *Exporter) ExportDashboards() error {
 		log.Info("exported dashboard provisioning file grafana-provisioning-dashboards.yml")
 	}
 	// get dashboards by folder
-	if folders, err = exporter.client.GetAllDashboards(); err == nil {
+	if folders, err = exporter.client.GetAllDashboards(exportedFolders); err == nil {
 		// write each folder in separate configmap
 		for folder, dashboards = range folders {
 			if folderName, configMap, err = configmap.Serialize(

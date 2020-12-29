@@ -6,6 +6,7 @@ import (
 	"encoding/json"
 	"github.com/gosimple/slug"
 	"github.com/grafana-tools/sdk"
+	log "github.com/sirupsen/logrus"
 	"gopkg.in/yaml.v3"
 	"net/http"
 )
@@ -47,7 +48,7 @@ func NewWithHTTPClient(url, apiToken string, httpClient *http.Client) *Client {
 // +-> folder-2
 //     +-> dashboard-2.json -> json model of dashboard 2
 //     +-> dashboard-3.json -> json model of dashboard 3
-func (client *Client) GetAllDashboards() (map[string]map[string]string, error) {
+func (client *Client) GetAllDashboards(exportedFolders []string) (map[string]map[string]string, error) {
 	var (
 		err         error
 		foundBoards []sdk.FoundBoard
@@ -62,25 +63,30 @@ func (client *Client) GetAllDashboards() (map[string]map[string]string, error) {
 	if foundBoards, err = c.Search(ctx, sdk.SearchType(sdk.SearchTypeDashboard)); err == nil {
 		for _, link := range foundBoards {
 			// Only process dashboards, not folders
-			if link.Type == "dash-db" {
-				// Get the dashboard JSON model
-				if rawBoard, _, err = c.GetRawDashboardByUID(ctx, link.UID); err == nil {
-					// The "General" board has an empty title in Grafana
-					if link.FolderTitle == "" {
-						link.FolderTitle = "General"
-					}
-					// First dashboard for this folder? Create the map
-					if _, ok := result[link.FolderTitle]; ok == false {
-						result[link.FolderTitle] = make(map[string]string)
-					}
-					// Reformat the JSON stream to store it properly in YAML
-					var buffer bytes.Buffer
-					_ = json.Indent(&buffer, rawBoard, "", "  ")
-					// Store it in the map
-					result[link.FolderTitle][slug.Make(link.Title)+".json"] = string(buffer.Bytes())
-				} else {
-					break
+			if link.Type != "dash-db" {
+				continue
+			}
+			// Only export if the dashboard is in a specified folder
+			if len(exportedFolders) > 0 && validFolder(link.FolderTitle, exportedFolders) == false {
+				continue
+			}
+			// Get the dashboard JSON model
+			if rawBoard, _, err = c.GetRawDashboardByUID(ctx, link.UID); err == nil {
+				// The "General" board has an empty title in Grafana
+				if link.FolderTitle == "" {
+					link.FolderTitle = "General"
 				}
+				// Reformat the JSON stream to store it properly in YAML
+				var buffer bytes.Buffer
+				_ = json.Indent(&buffer, rawBoard, "", "  ")
+				// First dashboard for this folder? Create the map
+				if _, ok := result[link.FolderTitle]; ok == false {
+					result[link.FolderTitle] = make(map[string]string)
+				}
+				// Store it in the map
+				result[link.FolderTitle][slug.Make(link.Title)+".json"] = string(buffer.Bytes())
+			} else {
+				log.Warnf("failed to get dashboard %s: %s", link.Title, err.Error())
 			}
 		}
 	}
@@ -114,4 +120,13 @@ func (client *Client) GetDatasources() (map[string]string, error) {
 		}
 	}
 	return result, err
+}
+
+func validFolder(folder string, folders []string) bool {
+	for _, f := range folders {
+		if f == folder {
+			return true
+		}
+	}
+	return false
 }
