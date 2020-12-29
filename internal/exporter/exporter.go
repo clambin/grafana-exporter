@@ -84,7 +84,7 @@ func (exporter *Exporter) ExportDashboards() error {
 	// write provisioning file
 	if _, content, err := exporter.serializeDashboardProvisioning(); err == nil {
 		exporter.write(exporter.directory, "grafana-provisioning-dashboards.yml", content)
-		log.Info("exported dashboard file grafana-provisioning-dashboards.yml")
+		log.Info("exported dashboard provisioning file grafana-provisioning-dashboards.yml")
 	}
 	// get dashboards by folder
 	if folders, err = exporter.client.GetAllDashboards(); err == nil {
@@ -112,7 +112,7 @@ func (exporter *Exporter) serializeDashboardProvisioning() (string, []byte, erro
     orgId: 1
     folder: ''
     disableDeletion: false
-    updateIntervalSeconds': 3600
+    updateIntervalSeconds: 3600
     allowUiUpdates: true
     options:
       path: /dashboards

@@ -131,7 +131,7 @@ data:
         orgId: 1
         folder: ''
         disableDeletion: false
-        updateIntervalSeconds': 3600
+        updateIntervalSeconds: 3600
         allowUiUpdates: true
         options:
           path: /dashboards
