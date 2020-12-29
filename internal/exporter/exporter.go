@@ -54,13 +54,10 @@ func (exporter *Exporter) ExportDatasources() error {
 	)
 
 	if datasources, err = exporter.client.GetDatasources(); err == nil {
-		log.Debug(datasources)
 		if folderName, configMap, err = configmap.Serialize(
 			"grafana-provisioning-datasources", exporter.namespace, datasources); err == nil {
 			filename := folderName + ".yml"
-			log.Debug(exporter.directory, filename)
 			exporter.write(exporter.directory, filename, configMap)
-			log.Info("exported datasource provisioning file " + filename)
 		}
 	}
 	return err
@@ -109,16 +106,16 @@ func (exporter *Exporter) ExportDashboards(exportedFolders []string) error {
 
 func (exporter *Exporter) serializeDashboardProvisioning() (string, []byte, error) {
 	const dashboardProvisioning = `apiVersion: 1
-  providers:
-  - name: 'dashboards'
-    orgId: 1
-    folder: ''
-    disableDeletion: false
-    updateIntervalSeconds: 3600
-    allowUiUpdates: true
-    options:
-      path: /dashboards
-      foldersFromFilesStructure: true
+providers:
+- name: 'dashboards'
+  orgId: 1
+  folder: ''
+  disableDeletion: false
+  updateIntervalSeconds: 3600
+  allowUiUpdates: true
+  options:
+    path: /dashboards
+    foldersFromFilesStructure: true
 `
 	return configmap.Serialize(
 		"grafana-dashboard-provisioning", exporter.namespace,

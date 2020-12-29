@@ -126,16 +126,16 @@ metadata:
 data:
   dashboards.yml: |
     apiVersion: 1
-      providers:
-      - name: 'dashboards'
-        orgId: 1
-        folder: ''
-        disableDeletion: false
-        updateIntervalSeconds: 3600
-        allowUiUpdates: true
-        options:
-          path: /dashboards
-          foldersFromFilesStructure: true
+    providers:
+    - name: 'dashboards'
+      orgId: 1
+      folder: ''
+      disableDeletion: false
+      updateIntervalSeconds: 3600
+      allowUiUpdates: true
+      options:
+        path: /dashboards
+        foldersFromFilesStructure: true
 `
 	general = `kind: ConfigMap
 apiVersion: v1

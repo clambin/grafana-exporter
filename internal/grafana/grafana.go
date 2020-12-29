@@ -62,12 +62,15 @@ func (client *Client) GetAllDashboards(exportedFolders []string) (map[string]map
 	// Get all dashboards
 	if foundBoards, err = c.Search(ctx, sdk.SearchType(sdk.SearchTypeDashboard)); err == nil {
 		for _, link := range foundBoards {
+			log.Debugf("considering %s (type: %s; folder: %s)", link.Title, link.Type, link.FolderTitle)
 			// Only process dashboards, not folders
 			if link.Type != "dash-db" {
+				log.Debug("wrong type. ignoring")
 				continue
 			}
 			// Only export if the dashboard is in a specified folder
 			if len(exportedFolders) > 0 && validFolder(link.FolderTitle, exportedFolders) == false {
+				log.Debugf("folder not in scope. ignoring")
 				continue
 			}
 			// Get the dashboard JSON model
@@ -85,6 +88,7 @@ func (client *Client) GetAllDashboards(exportedFolders []string) (map[string]map
 				}
 				// Store it in the map
 				result[link.FolderTitle][slug.Make(link.Title)+".json"] = string(buffer.Bytes())
+				log.Debug("Stored")
 			} else {
 				log.Warnf("failed to get dashboard %s: %s", link.Title, err.Error())
 			}
