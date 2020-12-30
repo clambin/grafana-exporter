@@ -8,7 +8,7 @@ import (
 
 // Serialize creates a ConfigMap structure and serializes it into a byte slice
 // so we can store it in a yaml file
-func Serialize(name, namespace string, files map[string]string) (string, []byte, error) {
+func Serialize(name, namespace string, files map[string]string) (string, string, error) {
 	type metadata struct {
 		Name      string `yaml:"name"`
 		Namespace string `yaml:"namespace"`
@@ -34,5 +34,5 @@ func Serialize(name, namespace string, files map[string]string) (string, []byte,
 	encoder := yaml.NewEncoder(&b)
 	encoder.SetIndent(2)
 	err := encoder.Encode(configmap)
-	return mapName, b.Bytes(), err
+	return mapName + ".yml", string(b.Bytes()), err
 }
