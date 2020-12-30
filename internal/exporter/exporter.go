@@ -128,11 +128,9 @@ func (exporter *Exporter) writeFiles(directory string, files map[string]string, 
 	)
 	if exporter.configuration.Direct {
 		targetDir := path.Join(exporter.configuration.Directory, directory)
-		if err = os.MkdirAll(targetDir, 0755); err == nil {
-			for fileName, fileContents = range files {
-				exporter.write(targetDir, fileName, fileContents)
-				log.Info("Wrote file " + path.Join(targetDir, fileName))
-			}
+		for fileName, fileContents = range files {
+			exporter.write(targetDir, fileName, fileContents)
+			log.Info("Wrote file " + path.Join(targetDir, fileName))
 		}
 	} else {
 		fileName, fileContents, err = configmap.Serialize(
@@ -146,7 +144,13 @@ func (exporter *Exporter) writeFiles(directory string, files map[string]string, 
 }
 
 func writeFile(directory, filename string, content string) {
-	if err := ioutil.WriteFile(path.Join(directory, filename), []byte(content), 0644); err != nil {
-		panic(err)
+	var err error
+
+	err = os.MkdirAll(directory, 0755)
+	if err == nil {
+		err = ioutil.WriteFile(path.Join(directory, filename), []byte(content), 0644)
+	}
+	if err != nil {
+		log.Errorf("unable to write %s: %s", filename, err.Error())
 	}
 }
