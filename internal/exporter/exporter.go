@@ -12,7 +12,7 @@ import (
 // Configuration holds all configuration parameters
 type Configuration struct {
 	Debug     bool
-	Configmap bool
+	Direct    bool
 	URL       string
 	APIToken  string
 	Directory string
@@ -126,7 +126,7 @@ func (exporter *Exporter) writeFiles(directory string, files map[string]string, 
 		fileName, fileContents string
 		err                    error
 	)
-	if exporter.configuration.Configmap == false {
+	if exporter.configuration.Direct {
 		targetDir := path.Join(exporter.configuration.Directory, directory)
 		if err = os.MkdirAll(targetDir, 0755); err == nil {
 			for fileName, fileContents = range files {

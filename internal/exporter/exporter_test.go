@@ -9,7 +9,7 @@ import (
 
 func TestExporter(t *testing.T) {
 	testCases := []struct {
-		configmap       bool
+		direct          bool
 		expectedFiles   map[string][]string
 		expectedContent []struct {
 			directory string
@@ -17,7 +17,7 @@ func TestExporter(t *testing.T) {
 			content   string
 		}
 	}{
-		{false,
+		{true,
 			map[string][]string{
 				".":       {"datasources.yml", "dashboards.yml"},
 				"folder1": {"db-1-1.json"},
@@ -32,7 +32,7 @@ func TestExporter(t *testing.T) {
 				{"folder1", "db-1-1.json", `"dashboard 1"`},
 			},
 		},
-		{true,
+		{false,
 			map[string][]string{
 				".": {
 					"grafana-provisioning-datasources.yml", "grafana-provisioning-dashboards.yml",
@@ -56,7 +56,7 @@ func TestExporter(t *testing.T) {
 
 		configuration := exporter.Configuration{
 			Directory: ".",
-			Configmap: testCase.configmap,
+			Direct:    testCase.direct,
 			Namespace: "monitoring",
 		}
 		log := newLogger()
