@@ -4,40 +4,69 @@ import (
 	"github.com/stretchr/testify/assert"
 	"grafana_exporter/internal/exporter"
 	"grafana_exporter/internal/grafanatest"
-	"os"
 	"testing"
 )
 
 func TestExporter(t *testing.T) {
-	var ok bool
-	var content []byte
-
+	configuration := exporter.Configuration{
+		Directory: ".",
+		Namespace: "monitoring",
+	}
 	log := newLogger()
-	dir := os.TempDir()
 	err := exporter.NewInternal(
+		&configuration,
 		grafanatest.NewWithHTTPClient(),
-		dir,
-		"monitoring",
-		[]string{},
 		log.writeFile,
 	).Export()
 
 	assert.Nil(t, err)
-	assert.Len(t, log.output, 1)
 
-	for _, files := range log.output {
-		content, ok = files[`grafana-provisioning-datasources.yml`]
-		assert.True(t, ok)
-		assert.Equal(t, datasources, string(content))
-		content, ok = files[`grafana-provisioning-dashboards.yml`]
-		assert.True(t, ok)
-		assert.Equal(t, dashboards, string(content))
-		content, ok = files[`grafana-dashboards-general.yml`]
-		assert.True(t, ok)
-		assert.Equal(t, general, string(content))
-		content, ok = files[`grafana-dashboards-folder1.yml`]
-		assert.True(t, ok)
-		assert.Equal(t, folder1, string(content))
+	expectedFiles := map[string][]string{
+		".": {
+			"datasources.yml", "grafana-provisioning-datasources.yml",
+			"dashboards.yml", "grafana-provisioning-dashboards.yml",
+			"grafana-dashboards-general.yml",
+			"grafana-dashboards-folder1.yml",
+		},
+		"folder1": {
+			"db-1-1.json",
+		},
+		"General": {
+			"db-0-1.json",
+		},
+	}
+
+	// Check all files were created
+	assert.Len(t, log.output, len(expectedFiles))
+	for directory, files := range expectedFiles {
+		created, ok := log.output[directory]
+		if assert.True(t, ok, directory, "missing directory: %s", directory) {
+			assert.Equal(t, len(files), len(created), directory+" has incorrect nr of files")
+			for _, file := range files {
+				_, ok := created[file]
+				assert.True(t, ok, file)
+			}
+		}
+	}
+
+	// Check content of yaml files (json's implicitely tested by testing configmaps
+
+	expectedContent := []struct {
+		directory string
+		filename  string
+		content   string
+	}{
+		{".", "grafana-provisioning-datasources.yml", datasources},
+		{".", "grafana-provisioning-dashboards.yml", dashboards},
+		{".", "grafana-dashboards-general.yml", general},
+		{".", "grafana-dashboards-folder1.yml", folder1},
+	}
+
+	for _, entry := range expectedContent {
+		content, ok := log.output[entry.directory][entry.filename]
+		if assert.True(t, ok, entry.filename) {
+			assert.Equal(t, entry.content, string(content))
+		}
 	}
 }
 
@@ -122,7 +151,7 @@ data:
 	dashboards = `kind: ConfigMap
 apiVersion: v1
 metadata:
-  name: grafana-provisioning-dashboard
+  name: grafana-provisioning-dashboards
   namespace: monitoring
 data:
   dashboards.yml: |

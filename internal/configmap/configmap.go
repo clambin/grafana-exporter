@@ -34,5 +34,5 @@ func Serialize(name, namespace string, files map[string]string) (string, []byte,
 	encoder := yaml.NewEncoder(&b)
 	encoder.SetIndent(2)
 	err := encoder.Encode(configmap)
-	return mapName, b.Bytes(), err
+	return mapName + ".yml", b.Bytes(), err
 }

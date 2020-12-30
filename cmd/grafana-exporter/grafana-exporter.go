@@ -11,17 +11,15 @@ import (
 )
 
 func main() {
-	getArguments()
+	configuration := getArguments()
+
+	if configuration.Debug {
+		log.SetLevel(log.DebugLevel)
+	}
 
 	log.Info("grafana-exporter v" + version.BuildVersion)
 
-	exp := exporter.New(
-		Configuration.url,
-		Configuration.apiToken,
-		Configuration.directory,
-		Configuration.namespace,
-		Configuration.folders,
-	)
+	exp := exporter.New(configuration)
 
 	if err := exp.Export(); err != nil {
 		log.Warningf("failed to export: %s", err.Error())
@@ -29,28 +27,21 @@ func main() {
 	}
 }
 
-// Configuration holds all configuration parameters
-var Configuration struct {
-	debug     bool
-	url       string
-	apiToken  string
-	directory string
-	namespace string
-	folders   []string
-}
-
-func getArguments() {
-	var folders string
+func getArguments() *exporter.Configuration {
+	var (
+		configuration exporter.Configuration
+		folders       string
+	)
 
 	a := kingpin.New(filepath.Base(os.Args[0]), "grafana provisioning exporter")
 	a.Version(version.BuildVersion)
 	a.HelpFlag.Short('h')
 	a.VersionFlag.Short('v')
-	a.Flag("debug", "Log debug messages").Short('d').BoolVar(&Configuration.debug)
-	a.Flag("url", "Grafana API URL").Short('u').Required().StringVar(&Configuration.url)
-	a.Flag("token", "Grafana API Token (must have admin access)").Short('t').Required().StringVar(&Configuration.apiToken)
-	a.Flag("out", "Output directory").Short('o').Default(".").StringVar(&Configuration.directory)
-	a.Flag("namespace", "K8s Namespace").Short('n').Default("monitoring").StringVar(&Configuration.namespace)
+	a.Flag("debug", "Log debug messages").Short('d').BoolVar(&configuration.Debug)
+	a.Flag("url", "Grafana API URL").Short('u').Required().StringVar(&configuration.URL)
+	a.Flag("token", "Grafana API Token (must have admin access)").Short('t').Required().StringVar(&configuration.APIToken)
+	a.Flag("out", "Output directory").Short('o').Default(".").StringVar(&configuration.Directory)
+	a.Flag("namespace", "K8s Namespace").Short('n').Default("monitoring").StringVar(&configuration.Namespace)
 	a.Flag("folders", "Comma-separated list of folders to export").Short('f').Default("").StringVar(&folders)
 
 	if _, err := a.Parse(os.Args[1:]); err != nil {
@@ -59,10 +50,8 @@ func getArguments() {
 	}
 
 	if folders != "" {
-		Configuration.folders = strings.Split(folders, ",")
+		configuration.Folders = strings.Split(folders, ",")
 	}
 
-	if Configuration.debug {
-		log.SetLevel(log.DebugLevel)
-	}
+	return &configuration
 }
