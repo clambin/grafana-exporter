@@ -28,5 +28,5 @@ func TestSerialize(t *testing.T) {
 	name, output, err := configmap.Serialize("Foo", "bar", dashboards)
 	assert.Nil(t, err)
 	assert.Equal(t, "foo.yml", name)
-	assert.Equal(t, expected, string(output))
+	assert.Equal(t, expected, output)
 }

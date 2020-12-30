@@ -75,7 +75,7 @@ func (client *Client) GetAllDashboards(exportedFolders []string) (map[string]map
 			}
 			// Get the dashboard JSON model
 			if rawBoard, _, err = c.GetRawDashboardByUID(ctx, link.UID); err == nil {
-				// The "General" board has an empty title in Grafana
+				// Het kind moet toch een naam hebben
 				if link.FolderTitle == "" {
 					link.FolderTitle = "General"
 				}

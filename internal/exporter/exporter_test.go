@@ -85,27 +85,27 @@ func TestExporter(t *testing.T) {
 		for _, entry := range testCase.expectedContent {
 			content, ok := log.output[entry.directory][entry.filename]
 			if assert.True(t, ok, entry.filename) {
-				assert.Equal(t, entry.content, string(content))
+				assert.Equal(t, entry.content, content)
 			}
 		}
 	}
 }
 
 type logger struct {
-	output map[string]map[string][]byte
+	output map[string]map[string]string
 }
 
 func newLogger() *logger {
 	return &logger{
-		output: make(map[string]map[string][]byte),
+		output: make(map[string]map[string]string),
 	}
 }
 
-func (log *logger) writeFile(directory, filename string, content []byte) {
+func (log *logger) writeFile(directory, filename string, content string) {
 	var ok bool
 
 	if _, ok = log.output[directory]; ok == false {
-		log.output[directory] = make(map[string][]byte)
+		log.output[directory] = make(map[string]string)
 	}
 	log.output[directory][filename] = content
 }
