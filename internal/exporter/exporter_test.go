@@ -8,64 +8,85 @@ import (
 )
 
 func TestExporter(t *testing.T) {
-	configuration := exporter.Configuration{
-		Directory: ".",
-		Namespace: "monitoring",
+	testCases := []struct {
+		configmap       bool
+		expectedFiles   map[string][]string
+		expectedContent []struct {
+			directory string
+			filename  string
+			content   string
+		}
+	}{
+		{false,
+			map[string][]string{
+				".":       {"datasources.yml", "dashboards.yml"},
+				"folder1": {"db-1-1.json"},
+				"General": {"db-0-1.json"},
+			},
+			[]struct {
+				directory string
+				filename  string
+				content   string
+			}{
+				{"General", "db-0-1.json", `"dashboard 2"`},
+				{"folder1", "db-1-1.json", `"dashboard 1"`},
+			},
+		},
+		{true,
+			map[string][]string{
+				".": {
+					"grafana-provisioning-datasources.yml", "grafana-provisioning-dashboards.yml",
+					"grafana-dashboards-general.yml", "grafana-dashboards-folder1.yml",
+				},
+			},
+			[]struct {
+				directory string
+				filename  string
+				content   string
+			}{
+				{".", "grafana-provisioning-datasources.yml", datasources},
+				{".", "grafana-provisioning-dashboards.yml", dashboards},
+				{".", "grafana-dashboards-general.yml", general},
+				{".", "grafana-dashboards-folder1.yml", folder1},
+			},
+		},
 	}
-	log := newLogger()
-	err := exporter.NewInternal(
-		&configuration,
-		grafanatest.NewWithHTTPClient(),
-		log.writeFile,
-	).Export()
 
-	assert.Nil(t, err)
+	for _, testCase := range testCases {
 
-	expectedFiles := map[string][]string{
-		".": {
-			"datasources.yml", "grafana-provisioning-datasources.yml",
-			"dashboards.yml", "grafana-provisioning-dashboards.yml",
-			"grafana-dashboards-general.yml",
-			"grafana-dashboards-folder1.yml",
-		},
-		"folder1": {
-			"db-1-1.json",
-		},
-		"General": {
-			"db-0-1.json",
-		},
-	}
+		configuration := exporter.Configuration{
+			Directory: ".",
+			Configmap: testCase.configmap,
+			Namespace: "monitoring",
+		}
+		log := newLogger()
+		err := exporter.NewInternal(
+			&configuration,
+			grafanatest.NewWithHTTPClient(),
+			log.writeFile,
+		).Export()
 
-	// Check all files were created
-	assert.Len(t, log.output, len(expectedFiles))
-	for directory, files := range expectedFiles {
-		created, ok := log.output[directory]
-		if assert.True(t, ok, directory, "missing directory: %s", directory) {
-			assert.Equal(t, len(files), len(created), directory+" has incorrect nr of files")
-			for _, file := range files {
-				_, ok := created[file]
-				assert.True(t, ok, file)
+		assert.Nil(t, err)
+
+		// Check all files were created
+		assert.Len(t, log.output, len(testCase.expectedFiles))
+		for directory, files := range testCase.expectedFiles {
+			created, ok := log.output[directory]
+			if assert.True(t, ok, directory, "missing directory: %s", directory) {
+				assert.Equal(t, len(files), len(created), directory+" has incorrect nr of files")
+				for _, file := range files {
+					_, ok := created[file]
+					assert.True(t, ok, file)
+				}
 			}
 		}
-	}
 
-	// Check content of yaml files (json's implicitely tested by testing configmaps
-
-	expectedContent := []struct {
-		directory string
-		filename  string
-		content   string
-	}{
-		{".", "grafana-provisioning-datasources.yml", datasources},
-		{".", "grafana-provisioning-dashboards.yml", dashboards},
-		{".", "grafana-dashboards-general.yml", general},
-		{".", "grafana-dashboards-folder1.yml", folder1},
-	}
-
-	for _, entry := range expectedContent {
-		content, ok := log.output[entry.directory][entry.filename]
-		if assert.True(t, ok, entry.filename) {
-			assert.Equal(t, entry.content, string(content))
+		// Check content of json files
+		for _, entry := range testCase.expectedContent {
+			content, ok := log.output[entry.directory][entry.filename]
+			if assert.True(t, ok, entry.filename) {
+				assert.Equal(t, entry.content, string(content))
+			}
 		}
 	}
 }

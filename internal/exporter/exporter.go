@@ -11,6 +11,7 @@ import (
 // Configuration holds all configuration parameters
 type Configuration struct {
 	Debug     bool
+	Configmap bool
 	URL       string
 	APIToken  string
 	Directory string
@@ -70,14 +71,13 @@ func (exporter *Exporter) exportDatasourcesProvisioning() error {
 	)
 
 	if datasources, err = exporter.client.GetDatasources(); err == nil {
-		if true {
+		if exporter.configuration.Configmap == false {
 			for fileName, fileContents = range datasources {
 				exporter.write(exporter.configuration.Directory, fileName, []byte(fileContents))
 				log.Info("exported datasources provisioning file: " + fileName)
 
 			}
-		}
-		if true {
+		} else {
 			if fileName, configMap, err = configmap.Serialize(
 				"grafana-provisioning-datasources", exporter.configuration.Namespace, datasources); err == nil {
 				exporter.write(exporter.configuration.Directory, fileName, configMap)
@@ -111,12 +111,10 @@ providers:
 		}
 	)
 
-	if true {
+	if exporter.configuration.Configmap == false {
 		exporter.write(exporter.configuration.Directory, "dashboards.yml", []byte(dashboardProvisioning))
 		log.Info("exported dashboard provisioning file: dashboards.yml")
-	}
-
-	if fileName, configMap, err = configmap.Serialize(
+	} else if fileName, configMap, err = configmap.Serialize(
 		"grafana-provisioning-dashboards", exporter.configuration.Namespace, provisioningFile); err == nil {
 		exporter.write(exporter.configuration.Directory, fileName, configMap)
 		log.Info("exported config map for dashboard provisioning file: grafana-provisioning-dashboards.yml")
@@ -144,20 +142,17 @@ func (exporter *Exporter) ExportDashboards() error {
 	// get dashboards by folder
 	if folders, err = exporter.client.GetAllDashboards(exporter.configuration.Folders); err == nil {
 		for directory, files := range folders {
-			if true {
+			if exporter.configuration.Configmap == false {
 				targetDir := path.Join(exporter.configuration.Directory, directory)
 				// ensure exporter.configuration.Directory / directory exists
 				for fileName, fileContents = range files {
 					exporter.write(targetDir, fileName, []byte(fileContents))
 					log.Info("exported dashboard file " + path.Join(directory, fileName))
 				}
-			}
-			if true {
-				if fileName, configMap, err = configmap.Serialize(
-					"grafana-dashboards-"+directory, exporter.configuration.Namespace, files); err == nil {
-					exporter.write(exporter.configuration.Directory, fileName, configMap)
-					log.Info("exported configmap for dashboard file " + fileName)
-				}
+			} else if fileName, configMap, err = configmap.Serialize(
+				"grafana-dashboards-"+directory, exporter.configuration.Namespace, files); err == nil {
+				exporter.write(exporter.configuration.Directory, fileName, configMap)
+				log.Info("exported configmap for dashboard file " + fileName)
 			}
 			if err != nil {
 				break

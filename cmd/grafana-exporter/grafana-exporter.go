@@ -38,6 +38,7 @@ func getArguments() *exporter.Configuration {
 	a.HelpFlag.Short('h')
 	a.VersionFlag.Short('v')
 	a.Flag("debug", "Log debug messages").Short('d').BoolVar(&configuration.Debug)
+	a.Flag("configmap", "Write to K8S ConfigMaps").BoolVar(&configuration.Configmap)
 	a.Flag("url", "Grafana API URL").Short('u').Required().StringVar(&configuration.URL)
 	a.Flag("token", "Grafana API Token (must have admin access)").Short('t').Required().StringVar(&configuration.APIToken)
 	a.Flag("out", "Output directory").Short('o').Default(".").StringVar(&configuration.Directory)
