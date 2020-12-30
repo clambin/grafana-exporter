@@ -118,7 +118,7 @@ providers:
     foldersFromFilesStructure: true
 `
 	return configmap.Serialize(
-		"grafana-dashboard-provisioning", exporter.namespace,
+		"grafana-provisioning-dashboard", exporter.namespace,
 		map[string]string{"dashboards.yml": dashboardProvisioning})
 }
 
