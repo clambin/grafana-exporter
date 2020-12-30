@@ -12,32 +12,34 @@ import (
 type Exporter struct {
 	directory string
 	namespace string
+	folders   []string
 	client    *grafana.Client
 	write     func(string, string, []byte)
 }
 
 // New creates a new Exporter
-func New(url, apiToken, directory, namespace string) *Exporter {
-	return NewExtended(grafana.New(url, apiToken), directory, namespace, writeFile)
+func New(url, apiToken, directory, namespace string, folders []string) *Exporter {
+	return NewInternal(grafana.New(url, apiToken), directory, namespace, folders, writeFile)
 }
 
-// NewExtended creates a new Exporter with provided Logger & Grafana Client
+// NewInternal creates a new Exporter with provided Logger & Grafana Client
 // Used in unit tests to test what was written to disk
-func NewExtended(client *grafana.Client, directory, namespace string, writeFunc func(string, string, []byte)) *Exporter {
+func NewInternal(client *grafana.Client, directory, namespace string, folders []string, writeFunc func(string, string, []byte)) *Exporter {
 	return &Exporter{
 		client:    client,
 		directory: directory,
 		namespace: namespace,
+		folders:   folders,
 		write:     writeFunc,
 	}
 }
 
 // Export writes all dashboard & datasource provisioning files to disk
-func (exporter *Exporter) Export(exportedFolders []string) error {
+func (exporter *Exporter) Export() error {
 	var err error
 
 	if err = exporter.ExportDatasources(); err == nil {
-		err = exporter.ExportDashboards(exportedFolders)
+		err = exporter.ExportDashboards()
 	}
 	return err
 
@@ -70,7 +72,7 @@ func (exporter *Exporter) ExportDatasources() error {
 // Inside the cluster, we mount each config map in a directory per folder. Using
 // 'foldersFromFilesStructure: True' inside the dashboard provisioning file then
 // respects that folder structure within Grafana
-func (exporter *Exporter) ExportDashboards(exportedFolders []string) error {
+func (exporter *Exporter) ExportDashboards() error {
 	var (
 		err        error
 		folder     string
@@ -86,7 +88,7 @@ func (exporter *Exporter) ExportDashboards(exportedFolders []string) error {
 		log.Info("exported dashboard provisioning file grafana-provisioning-dashboards.yml")
 	}
 	// get dashboards by folder
-	if folders, err = exporter.client.GetAllDashboards(exportedFolders); err == nil {
+	if folders, err = exporter.client.GetAllDashboards(exporter.folders); err == nil {
 		// write each folder in separate configmap
 		for folder, dashboards = range folders {
 			if folderName, configMap, err = configmap.Serialize(

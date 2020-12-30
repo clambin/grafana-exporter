@@ -14,12 +14,13 @@ func TestExporter(t *testing.T) {
 
 	log := newLogger()
 	dir := os.TempDir()
-	err := exporter.NewExtended(
+	err := exporter.NewInternal(
 		grafanatest.NewWithHTTPClient(),
 		dir,
 		"monitoring",
+		[]string{},
 		log.writeFile,
-	).Export([]string{})
+	).Export()
 
 	assert.Nil(t, err)
 	assert.Len(t, log.output, 1)
