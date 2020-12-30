@@ -5,6 +5,7 @@ import (
 	"grafana_exporter/internal/configmap"
 	"grafana_exporter/internal/grafana"
 	"io/ioutil"
+	"os"
 	"path"
 )
 
@@ -63,26 +64,14 @@ func (exporter *Exporter) Export() error {
 // as created in the grafana.module
 func (exporter *Exporter) exportDatasourcesProvisioning() error {
 	var (
-		err          error
-		datasources  map[string]string
-		fileName     string
-		fileContents string
+		err         error
+		datasources map[string]string
+		//fileName     string
+		//fileContents string
 	)
 
 	if datasources, err = exporter.client.GetDatasources(); err == nil {
-		if exporter.configuration.Configmap == false {
-			for fileName, fileContents = range datasources {
-				exporter.write(exporter.configuration.Directory, fileName, fileContents)
-				log.Info("exported datasources provisioning file: " + fileName)
-
-			}
-		} else {
-			if fileName, fileContents, err = configmap.Serialize(
-				"grafana-provisioning-datasources", exporter.configuration.Namespace, datasources); err == nil {
-				exporter.write(exporter.configuration.Directory, fileName, fileContents)
-				log.Info("exported config map for datasources provisioning file: " + fileName)
-			}
-		}
+		err = exporter.writeFiles(".", datasources, "grafana-provisioning-datasources")
 	}
 	return err
 }
@@ -101,25 +90,7 @@ providers:
     path: /dashboards
     foldersFromFilesStructure: true
 `
-	var (
-		err              error
-		fileName         string
-		fileContent      string
-		provisioningFile = map[string]string{
-			"dashboards.yml": dashboardProvisioning,
-		}
-	)
-
-	if exporter.configuration.Configmap == false {
-		exporter.write(exporter.configuration.Directory, "dashboards.yml", dashboardProvisioning)
-		log.Info("exported dashboard provisioning file: dashboards.yml")
-	} else if fileName, fileContent, err = configmap.Serialize(
-		"grafana-provisioning-dashboards", exporter.configuration.Namespace, provisioningFile); err == nil {
-		exporter.write(exporter.configuration.Directory, fileName, fileContent)
-		log.Info("exported config map for dashboard provisioning file: grafana-provisioning-dashboards.yml")
-	}
-
-	return err
+	return exporter.writeFiles(".", map[string]string{"dashboards.yml": dashboardProvisioning}, "grafana-provisioning-dashboards")
 }
 
 // ExportDashboards writes all Grafana dashboards.
@@ -131,27 +102,17 @@ providers:
 // respects that folder structure within Grafana
 func (exporter *Exporter) ExportDashboards() error {
 	var (
-		err          error
-		fileName     string
-		folders      map[string]map[string]string
-		fileContents string
+		err error
+		// fileName     string
+		folders map[string]map[string]string
+		// fileContents string
 	)
 
 	// get dashboards by folder
 	if folders, err = exporter.client.GetAllDashboards(exporter.configuration.Folders); err == nil {
 		for directory, files := range folders {
-			if exporter.configuration.Configmap == false {
-				targetDir := path.Join(exporter.configuration.Directory, directory)
-				// ensure exporter.configuration.Directory / directory exists
-				for fileName, fileContents = range files {
-					exporter.write(targetDir, fileName, fileContents)
-					log.Info("exported dashboard file " + path.Join(directory, fileName))
-				}
-			} else if fileName, fileContents, err = configmap.Serialize(
-				"grafana-dashboards-"+directory, exporter.configuration.Namespace, files); err == nil {
-				exporter.write(exporter.configuration.Directory, fileName, fileContents)
-				log.Info("exported configmap for dashboard file " + fileName)
-			}
+			// write all dashboards for that folder to files or a configmap
+			err = exporter.writeFiles(directory, files, "grafana-dashboards-"+directory)
 			if err != nil {
 				break
 			}
@@ -160,18 +121,18 @@ func (exporter *Exporter) ExportDashboards() error {
 	return err
 }
 
-func (exporter *Exporter) saveFiles(directory string, files map[string]string, configmapName string) {
+func (exporter *Exporter) writeFiles(directory string, files map[string]string, configmapName string) error {
 	var (
 		fileName, fileContents string
 		err                    error
 	)
 	if exporter.configuration.Configmap == false {
 		targetDir := path.Join(exporter.configuration.Directory, directory)
-		// FIXME: create the directory if it doesn't exist
-		for fileName, fileContents = range files {
-			exporter.write(targetDir, fileName, fileContents)
-			log.Info("Wrote file " + path.Join(targetDir, fileName))
-
+		if err = os.MkdirAll(targetDir, 0755); err == nil {
+			for fileName, fileContents = range files {
+				exporter.write(targetDir, fileName, fileContents)
+				log.Info("Wrote file " + path.Join(targetDir, fileName))
+			}
 		}
 	} else {
 		fileName, fileContents, err = configmap.Serialize(
@@ -181,6 +142,7 @@ func (exporter *Exporter) saveFiles(directory string, files map[string]string, c
 			log.Info("Wrote file " + fileName)
 		}
 	}
+	return err
 }
 
 func writeFile(directory, filename string, content string) {
