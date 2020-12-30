@@ -5,106 +5,79 @@ import (
 	"grafana_exporter/internal/configmap"
 	"grafana_exporter/internal/grafana"
 	"io/ioutil"
+	"os"
 	"path"
 )
 
+// Configuration holds all configuration parameters
+type Configuration struct {
+	Debug     bool
+	Direct    bool
+	URL       string
+	APIToken  string
+	Directory string
+	Namespace string
+	Folders   []string
+}
+
 // Exporter exports all required data from Grafana to disk
 type Exporter struct {
-	directory string
-	namespace string
-	client    *grafana.Client
-	write     func(string, string, []byte)
+	configuration *Configuration
+	client        *grafana.Client
+	write         func(string, string, string)
 }
 
 // New creates a new Exporter
-func New(url, apiToken, directory, namespace string) *Exporter {
-	return NewExtended(grafana.New(url, apiToken), directory, namespace, writeFile)
+func New(configuration *Configuration) *Exporter {
+	return NewInternal(configuration, grafana.New(configuration.URL, configuration.APIToken), writeFile)
 }
 
-// NewExtended creates a new Exporter with provided Logger & Grafana Client
+// NewInternal creates a new Exporter with provided Logger & Grafana Client
 // Used in unit tests to test what was written to disk
-func NewExtended(client *grafana.Client, directory, namespace string, writeFunc func(string, string, []byte)) *Exporter {
+func NewInternal(configuration *Configuration, client *grafana.Client, writeFunc func(string, string, string)) *Exporter {
 	return &Exporter{
-		client:    client,
-		directory: directory,
-		namespace: namespace,
-		write:     writeFunc,
+		configuration: configuration,
+		client:        client,
+		write:         writeFunc,
 	}
 }
 
 // Export writes all dashboard & datasource provisioning files to disk
-func (exporter *Exporter) Export(exportedFolders []string) error {
+func (exporter *Exporter) Export() error {
 	var err error
 
-	if err = exporter.ExportDatasources(); err == nil {
-		err = exporter.ExportDashboards(exportedFolders)
+	err = exporter.exportDatasourcesProvisioning()
+
+	if err == nil {
+		err = exporter.exportDashboardsProvisioning()
 	}
+
+	if err == nil {
+		err = exporter.ExportDashboards()
+	}
+
 	return err
 
 }
 
-// ExportDatasources writes to disk a ConfigMap for the Grafana datasource provisioning file,
+// exportDatasources writes the Grafana datasource provisioning file
 // as created in the grafana.module
-func (exporter *Exporter) ExportDatasources() error {
+func (exporter *Exporter) exportDatasourcesProvisioning() error {
 	var (
 		err         error
 		datasources map[string]string
-		folderName  string
-		configMap   []byte
+		//fileName     string
+		//fileContents string
 	)
 
 	if datasources, err = exporter.client.GetDatasources(); err == nil {
-		if folderName, configMap, err = configmap.Serialize(
-			"grafana-provisioning-datasources", exporter.namespace, datasources); err == nil {
-			filename := folderName + ".yml"
-			exporter.write(exporter.directory, filename, configMap)
-		}
+		err = exporter.writeFiles(".", datasources, "grafana-provisioning-datasources")
 	}
 	return err
 }
 
-// ExportDashboards writes to disk a set of ConfigMaps for all Grafana dashboards.
-// We create one config map per Grafana folder, containing the JSON models as
-// individual files.
-//
-// Inside the cluster, we mount each config map in a directory per folder. Using
-// 'foldersFromFilesStructure: True' inside the dashboard provisioning file then
-// respects that folder structure within Grafana
-func (exporter *Exporter) ExportDashboards(exportedFolders []string) error {
-	var (
-		err        error
-		folder     string
-		folderName string
-		folders    map[string]map[string]string
-		dashboards map[string]string
-		configMap  []byte
-	)
-
-	// write provisioning file
-	if _, content, err := exporter.serializeDashboardProvisioning(); err == nil {
-		exporter.write(exporter.directory, "grafana-provisioning-dashboards.yml", content)
-		log.Info("exported dashboard provisioning file grafana-provisioning-dashboards.yml")
-	}
-	// get dashboards by folder
-	if folders, err = exporter.client.GetAllDashboards(exportedFolders); err == nil {
-		// write each folder in separate configmap
-		for folder, dashboards = range folders {
-			if folderName, configMap, err = configmap.Serialize(
-				"grafana-dashboards-"+folder, exporter.namespace, dashboards); err == nil {
-				filename := folderName + ".yml"
-				exporter.write(exporter.directory, filename, configMap)
-				log.Info("exported dashboard file " + filename)
-
-			} else {
-				break
-			}
-
-		}
-	}
-	return err
-}
-
-func (exporter *Exporter) serializeDashboardProvisioning() (string, []byte, error) {
+// exportDashboardsProvisioning writes the Grafana dashboard provisioning file
+func (exporter *Exporter) exportDashboardsProvisioning() error {
 	const dashboardProvisioning = `apiVersion: 1
 providers:
 - name: 'dashboards'
@@ -117,13 +90,67 @@ providers:
     path: /dashboards
     foldersFromFilesStructure: true
 `
-	return configmap.Serialize(
-		"grafana-provisioning-dashboard", exporter.namespace,
-		map[string]string{"dashboards.yml": dashboardProvisioning})
+	return exporter.writeFiles(".", map[string]string{"dashboards.yml": dashboardProvisioning}, "grafana-provisioning-dashboards")
 }
 
-func writeFile(directory, filename string, content []byte) {
-	if err := ioutil.WriteFile(path.Join(directory, filename), content, 0644); err != nil {
-		panic(err)
+// ExportDashboards writes all Grafana dashboards.
+// If we're writing K8S ConfigMaps. we create one config map per Grafana folder,
+// each containing the JSON models as individual files.
+//
+// Inside the cluster, we mount each config map in a directory per folder. Using
+// 'foldersFromFilesStructure: True' inside the dashboard provisioning file then
+// respects that folder structure within Grafana
+func (exporter *Exporter) ExportDashboards() error {
+	var (
+		err error
+		// fileName     string
+		folders map[string]map[string]string
+		// fileContents string
+	)
+
+	// get dashboards by folder
+	if folders, err = exporter.client.GetAllDashboards(exporter.configuration.Folders); err == nil {
+		for directory, files := range folders {
+			// write all dashboards for that folder to files or a configmap
+			err = exporter.writeFiles(directory, files, "grafana-dashboards-"+directory)
+			if err != nil {
+				break
+			}
+		}
+	}
+	return err
+}
+
+func (exporter *Exporter) writeFiles(directory string, files map[string]string, configmapName string) error {
+	var (
+		fileName, fileContents string
+		err                    error
+	)
+	if exporter.configuration.Direct {
+		targetDir := path.Join(exporter.configuration.Directory, directory)
+		for fileName, fileContents = range files {
+			exporter.write(targetDir, fileName, fileContents)
+			log.Info("Wrote file " + path.Join(targetDir, fileName))
+		}
+	} else {
+		fileName, fileContents, err = configmap.Serialize(
+			configmapName, exporter.configuration.Namespace, files)
+		if err == nil {
+			exporter.write(exporter.configuration.Directory, fileName, fileContents)
+			log.Info("Wrote file " + fileName)
+		}
+	}
+	return err
+}
+
+func writeFile(directory, filename string, content string) {
+	var err error
+
+	err = os.MkdirAll(directory, 0755)
+	if err == nil {
+		err = ioutil.WriteFile(path.Join(directory, filename), []byte(content), 0644)
+	}
+	if err != nil {
+		log.Errorf("unable to write %s: %s", filename, err.Error())
 	}
 }
