@@ -121,7 +121,7 @@ data:
 	dashboards = `kind: ConfigMap
 apiVersion: v1
 metadata:
-  name: grafana-dashboard-provisioning
+  name: grafana-provisioning-dashboard
   namespace: monitoring
 data:
   dashboards.yml: |
