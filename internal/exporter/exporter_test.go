@@ -1,9 +1,9 @@
 package exporter_test
 
 import (
+	"github.com/clambin/grafana-exporter/internal/exporter"
+	"github.com/clambin/grafana-exporter/internal/grafanatest"
 	"github.com/stretchr/testify/assert"
-	"grafana_exporter/internal/exporter"
-	"grafana_exporter/internal/grafanatest"
 	"testing"
 )
 

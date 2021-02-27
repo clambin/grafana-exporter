@@ -1,11 +1,9 @@
 package grafana_test
 
 import (
-	"testing"
-
+	"github.com/clambin/grafana-exporter/internal/grafanatest"
 	"github.com/stretchr/testify/assert"
-
-	"grafana_exporter/internal/grafanatest"
+	"testing"
 )
 
 func TestGetDashboardFolders(t *testing.T) {

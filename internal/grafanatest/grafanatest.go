@@ -2,8 +2,8 @@ package grafanatest
 
 import (
 	"bytes"
-	"github.com/clambin/httpstub"
-	"grafana_exporter/internal/grafana"
+	"github.com/clambin/gotools/httpstub"
+	"github.com/clambin/grafana-exporter/internal/grafana"
 	"io/ioutil"
 	"net/http"
 )

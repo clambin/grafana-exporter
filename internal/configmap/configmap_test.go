@@ -1,8 +1,8 @@
 package configmap_test
 
 import (
+	"github.com/clambin/grafana-exporter/internal/configmap"
 	"github.com/stretchr/testify/assert"
-	"grafana_exporter/internal/configmap"
 	"testing"
 )
 
