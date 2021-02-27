@@ -20,11 +20,13 @@ type Configuration struct {
 	Folders   []string
 }
 
+type writeFunc func(string, string, string) error
+
 // Exporter exports all required data from Grafana to disk
 type Exporter struct {
 	configuration *Configuration
 	client        *grafana.Client
-	write         func(string, string, string)
+	write         writeFunc
 }
 
 // New creates a new Exporter
@@ -34,7 +36,7 @@ func New(configuration *Configuration) *Exporter {
 
 // NewInternal creates a new Exporter with provided Logger & Grafana Client
 // Used in unit tests to test what was written to disk
-func NewInternal(configuration *Configuration, client *grafana.Client, writeFunc func(string, string, string)) *Exporter {
+func NewInternal(configuration *Configuration, client *grafana.Client, writeFunc writeFunc) *Exporter {
 	return &Exporter{
 		configuration: configuration,
 		client:        client,
@@ -43,9 +45,7 @@ func NewInternal(configuration *Configuration, client *grafana.Client, writeFunc
 }
 
 // Export writes all dashboard & datasource provisioning files to disk
-func (exporter *Exporter) Export() error {
-	var err error
-
+func (exporter *Exporter) Export() (err error) {
 	err = exporter.exportDatasourcesProvisioning()
 
 	if err == nil {
@@ -56,24 +56,18 @@ func (exporter *Exporter) Export() error {
 		err = exporter.ExportDashboards()
 	}
 
-	return err
-
+	return
 }
 
 // exportDatasources writes the Grafana datasource provisioning file
 // as created in the grafana.module
-func (exporter *Exporter) exportDatasourcesProvisioning() error {
-	var (
-		err         error
-		datasources map[string]string
-		//fileName     string
-		//fileContents string
-	)
+func (exporter *Exporter) exportDatasourcesProvisioning() (err error) {
+	var datasources map[string]string
 
 	if datasources, err = exporter.client.GetDatasources(); err == nil {
 		err = exporter.writeFiles(".", datasources, "grafana-provisioning-datasources")
 	}
-	return err
+	return
 }
 
 // exportDashboardsProvisioning writes the Grafana dashboard provisioning file
@@ -100,13 +94,8 @@ providers:
 // Inside the cluster, we mount each config map in a directory per folder. Using
 // 'foldersFromFilesStructure: True' inside the dashboard provisioning file then
 // respects that folder structure within Grafana
-func (exporter *Exporter) ExportDashboards() error {
-	var (
-		err error
-		// fileName     string
-		folders map[string]map[string]string
-		// fileContents string
-	)
+func (exporter *Exporter) ExportDashboards() (err error) {
+	var folders map[string]map[string]string
 
 	// get dashboards by folder
 	if folders, err = exporter.client.GetAllDashboards(exporter.configuration.Folders); err == nil {
@@ -118,39 +107,44 @@ func (exporter *Exporter) ExportDashboards() error {
 			}
 		}
 	}
-	return err
+	return
 }
 
-func (exporter *Exporter) writeFiles(directory string, files map[string]string, configmapName string) error {
-	var (
-		fileName, fileContents string
-		err                    error
-	)
+func (exporter *Exporter) writeFiles(directory string, files map[string]string, configmapName string) (err error) {
+	var fileName, fileContents string
+
 	if exporter.configuration.Direct {
 		targetDir := path.Join(exporter.configuration.Directory, directory)
 		for fileName, fileContents = range files {
-			exporter.write(targetDir, fileName, fileContents)
-			log.Info("Wrote file " + path.Join(targetDir, fileName))
+			if err = exporter.write(targetDir, fileName, fileContents); err == nil {
+				log.Info("Wrote file " + path.Join(targetDir, fileName))
+			} else {
+				break
+			}
 		}
 	} else {
 		fileName, fileContents, err = configmap.Serialize(
 			configmapName, exporter.configuration.Namespace, files)
 		if err == nil {
-			exporter.write(exporter.configuration.Directory, fileName, fileContents)
+			err = exporter.write(exporter.configuration.Directory, fileName, fileContents)
+		}
+		if err == nil {
 			log.Info("Wrote file " + fileName)
 		}
 	}
-	return err
+	return
 }
 
-func writeFile(directory, filename string, content string) {
-	var err error
-
+func writeFile(directory, filename string, content string) (err error) {
 	err = os.MkdirAll(directory, 0755)
 	if err == nil {
 		err = ioutil.WriteFile(path.Join(directory, filename), []byte(content), 0644)
 	}
 	if err != nil {
-		log.Errorf("unable to write %s: %s", filename, err.Error())
+		log.WithFields(log.Fields{
+			"err":      err,
+			"filename": filename,
+		}).Error("unable to write file")
 	}
+	return
 }

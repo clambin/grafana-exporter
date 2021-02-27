@@ -10,7 +10,7 @@ WORKDIR /app
 ARG TARGETOS
 ARG TARGETARCH
 
-COPY bld/grafana-exporter-$TARGETOS-$TARGETARCH /app/grafana_exporter
+COPY bld/grafana-exporter-$TARGETOS-$TARGETARCH /app/grafana-exporter
 COPY init/grafana-exporter.sh .
 
 USER abc

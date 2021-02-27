@@ -101,13 +101,15 @@ func newLogger() *logger {
 	}
 }
 
-func (log *logger) writeFile(directory, filename string, content string) {
+func (log *logger) writeFile(directory, filename string, content string) (err error) {
 	var ok bool
 
 	if _, ok = log.output[directory]; ok == false {
 		log.output[directory] = make(map[string]string)
 	}
 	log.output[directory][filename] = content
+
+	return
 }
 
 const (
