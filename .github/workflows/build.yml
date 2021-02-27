@@ -42,12 +42,12 @@ jobs:
           PLATFORM: ${{ matrix.platform }}
           ARCH: ${{ matrix.arch }}
           RELEASE_VERSION: ${{ steps.vars.outputs.branch }}
-          run: |
-            GOOS=$PLATFORM GOARCH=$ARCH \
-              go build \
-                -ldflags "-X github.com/clambin/grafana-exporter/internal/version.BuildVersion=$RELEASE_VERSION" \
-                -o bld/$TARGET-$PLATFORM-$ARCH \
-                cmd/$TARGET/$TARGET.go
+        run: |
+          GOOS=$PLATFORM GOARCH=$ARCH \
+            go build \
+              -ldflags "-X github.com/clambin/grafana-exporter/internal/version.BuildVersion=$RELEASE_VERSION" \
+              -o bld/$TARGET-$PLATFORM-$ARCH \
+              cmd/$TARGET/$TARGET.go
       - uses: actions/upload-artifact@v2
         with:
           name: ${{ matrix.target }}-${{ matrix.platform }}-${{ matrix.arch }}
