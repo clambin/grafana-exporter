@@ -1,8 +1,8 @@
 package main
 
 import (
-	"github.com/clambin/grafana-exporter/internal/exporter"
-	"github.com/clambin/grafana-exporter/internal/version"
+	"github.com/clambin/grafana-exporter/exporter"
+	"github.com/clambin/grafana-exporter/version"
 	log "github.com/sirupsen/logrus"
 	"gopkg.in/alecthomas/kingpin.v2"
 	"os"

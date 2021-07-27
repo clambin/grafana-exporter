@@ -1,7 +1,7 @@
 package grafana_test
 
 import (
-	"github.com/clambin/grafana-exporter/internal/grafanatest"
+	"github.com/clambin/grafana-exporter/grafanatest"
 	"github.com/stretchr/testify/assert"
 	"testing"
 )

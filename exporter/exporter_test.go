@@ -1,8 +1,8 @@
 package exporter_test
 
 import (
-	"github.com/clambin/grafana-exporter/internal/exporter"
-	"github.com/clambin/grafana-exporter/internal/grafanatest"
+	exporter2 "github.com/clambin/grafana-exporter/exporter"
+	grafanatest2 "github.com/clambin/grafana-exporter/grafanatest"
 	"github.com/stretchr/testify/assert"
 	"testing"
 )
@@ -54,15 +54,15 @@ func TestExporter(t *testing.T) {
 
 	for _, testCase := range testCases {
 
-		configuration := exporter.Configuration{
+		configuration := exporter2.Configuration{
 			Directory: ".",
 			Direct:    testCase.direct,
 			Namespace: "monitoring",
 		}
 		log := newLogger()
-		err := exporter.NewInternal(
+		err := exporter2.NewInternal(
 			&configuration,
-			grafanatest.NewWithHTTPClient(),
+			grafanatest2.NewWithHTTPClient(),
 			log.writeFile,
 		).Export()
 

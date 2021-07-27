@@ -1,8 +1,8 @@
 package exporter
 
 import (
-	"github.com/clambin/grafana-exporter/internal/configmap"
-	"github.com/clambin/grafana-exporter/internal/grafana"
+	"github.com/clambin/grafana-exporter/configmap"
+	"github.com/clambin/grafana-exporter/grafana"
 	log "github.com/sirupsen/logrus"
 	"io/ioutil"
 	"os"

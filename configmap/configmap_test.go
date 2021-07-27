@@ -1,7 +1,7 @@
 package configmap_test
 
 import (
-	"github.com/clambin/grafana-exporter/internal/configmap"
+	configmap2 "github.com/clambin/grafana-exporter/configmap"
 	"github.com/stretchr/testify/assert"
 	"testing"
 )
@@ -25,7 +25,7 @@ func TestSerialize(t *testing.T) {
 		"file-2.json": "multi\nline\ncontent",
 	}
 
-	name, output, err := configmap.Serialize("Foo", "bar", dashboards)
+	name, output, err := configmap2.Serialize("Foo", "bar", dashboards)
 	assert.Nil(t, err)
 	assert.Equal(t, "foo.yml", name)
 	assert.Equal(t, expected, output)
