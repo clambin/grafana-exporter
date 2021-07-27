@@ -82,10 +82,9 @@ jobs:
         id: docker_meta
         with:
           images: ghcr.io/clambin/grafana-exporter
-          tag-sha: True
-          tag-semver: |
-            {{version}}
-            {{major}}.{{minor}}
+          tags: |
+            type=sha
+            type=semver,pattern={{version}}
       - uses: docker/build-push-action@v2.6.1
         with:
           context: .
