@@ -1,28 +1,27 @@
 package grafana_test
 
 import (
-	"github.com/clambin/grafana-exporter/grafanatest"
+	"github.com/clambin/grafana-exporter/grafana"
+	"github.com/clambin/grafana-exporter/grafana/mock"
 	"github.com/stretchr/testify/assert"
+	"net/http"
+	"net/http/httptest"
 	"testing"
 )
 
 func TestGetDashboardFolders(t *testing.T) {
-	var (
-		dashboardMap map[string]map[string]string
-		folder       map[string]string
-		content      string
-		ok           bool
-		err          error
-	)
-	exportedFolders := make([]string, 0)
+	server := httptest.NewServer(http.HandlerFunc(mock.ServerHandler))
+	defer server.Close()
+	client := grafana.New(server.URL, "")
 
-	dashboardMap, err = grafanatest.NewWithHTTPClient().GetAllDashboards(exportedFolders)
+	dashboardMap, err := client.GetAllDashboards([]string{})
 
 	if assert.Nil(t, err) {
 		assert.Len(t, dashboardMap, 2)
-		folder, ok = dashboardMap["General"]
+		folder, ok := dashboardMap["General"]
 		assert.True(t, ok)
 		assert.Len(t, folder, 1)
+		var content string
 		content, ok = folder["db-0-1.json"]
 		assert.True(t, ok)
 		assert.Equal(t, `"dashboard 2"`, content)
@@ -34,17 +33,17 @@ func TestGetDashboardFolders(t *testing.T) {
 		assert.Equal(t, `"dashboard 1"`, content)
 	}
 
-	exportedFolders = []string{"folder1"}
-
-	dashboardMap, err = grafanatest.NewWithHTTPClient().GetAllDashboards(exportedFolders)
+	dashboardMap, err = client.GetAllDashboards([]string{"folder1"})
 
 	if assert.Nil(t, err) {
 		assert.Len(t, dashboardMap, 1)
-		_, ok = dashboardMap["General"]
+		_, ok := dashboardMap["General"]
 		assert.False(t, ok)
-		_, ok = dashboardMap["folder1"]
+		var folder map[string]string
+		folder, ok = dashboardMap["folder1"]
 		assert.True(t, ok)
 		assert.Len(t, folder, 1)
+		var content string
 		content, ok = folder["db-1-1.json"]
 		assert.True(t, ok)
 		assert.Equal(t, `"dashboard 1"`, content)
@@ -53,7 +52,11 @@ func TestGetDashboardFolders(t *testing.T) {
 }
 
 func TestGetDatasources(t *testing.T) {
-	datasourceMap, err := grafanatest.NewWithHTTPClient().GetDatasources()
+	server := httptest.NewServer(http.HandlerFunc(mock.ServerHandler))
+	defer server.Close()
+	client := grafana.New(server.URL, "")
+
+	datasourceMap, err := client.GetDatasources()
 
 	var ok bool
 	assert.Nil(t, err)
@@ -103,7 +106,7 @@ datasources:
     name: Prometheus
     type: prometheus
     access: proxy
-    url: http://monitoring-prometheus-server.monitoring.svc:80
+    url: http://monitoring-prometheus-mock.monitoring.svc:80
     password: ""
     user: ""
     database: ""

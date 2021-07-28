@@ -1,52 +1,27 @@
-package grafanatest
+package mock
 
 import (
-	"bytes"
-	"github.com/clambin/gotools/httpstub"
-	"github.com/clambin/grafana-exporter/grafana"
-	"io/ioutil"
 	"net/http"
 )
 
-// NewWithHTTPClient returns a Grafana Client bound to a stubbed HTTP Server
-// Used for unit testing
-func NewWithHTTPClient() *grafana.Client {
-	return grafana.NewWithHTTPClient(
-		"http://example.com",
-		"",
-		httpstub.NewTestClient(loopback),
-	)
-}
+func ServerHandler(w http.ResponseWriter, req *http.Request) {
+	response, ok := responses[req.URL.Path]
 
-func loopback(req *http.Request) *http.Response {
-	switch req.URL.Path {
-	case "/api/search":
-		return &http.Response{
-			StatusCode: http.StatusOK,
-			Body:       ioutil.NopCloser(bytes.NewBufferString(allDashboards)),
-		}
-	case "/api/dashboards/uid/jQXLLIzRa":
-		return &http.Response{
-			StatusCode: http.StatusOK,
-			Body:       ioutil.NopCloser(bytes.NewBufferString(dashboard1)),
-		}
-	case "/api/dashboards/uid/vJMuruVWk":
-		return &http.Response{
-			StatusCode: http.StatusOK,
-			Body:       ioutil.NopCloser(bytes.NewBufferString(dashboard2)),
-		}
-	case "/api/datasources":
-		return &http.Response{
-			StatusCode: http.StatusOK,
-			Body:       ioutil.NopCloser(bytes.NewBufferString(allDatasources)),
-		}
-	}
-	return &http.Response{
-		StatusCode: http.StatusNotFound,
+	if ok {
+		_, _ = w.Write([]byte(response))
+	} else {
+		http.Error(w, "endpoint not implemented: "+req.URL.Path, http.StatusNotFound)
 	}
 }
 
-var (
+var responses = map[string]string{
+	"/api/search":                   allDashboards,
+	"/api/dashboards/uid/jQXLLIzRa": dashboard1,
+	"/api/dashboards/uid/vJMuruVWk": dashboard2,
+	"/api/datasources":              allDataSources,
+}
+
+const (
 	allDashboards = `[
   {
     "id": 1,
@@ -90,7 +65,7 @@ var (
 	dashboard1 = `{ "dashboard": "dashboard 1"}`
 	dashboard2 = `{ "dashboard": "dashboard 2"}`
 
-	allDatasources = `[
+	allDataSources = `[
   {
     "id": 5,
     "orgId": 1,
@@ -133,7 +108,7 @@ var (
     "type": "prometheus",
     "typeLogoUrl": "public/app/plugins/datasource/prometheus/img/prometheus_logo.svg",
     "access": "proxy",
-    "url": "http://monitoring-prometheus-server.monitoring.svc:80",
+    "url": "http://monitoring-prometheus-mock.monitoring.svc:80",
     "password": "",
     "user": "",
     "database": "",

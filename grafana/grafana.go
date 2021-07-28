@@ -65,20 +65,20 @@ func (client *Client) GetAllDashboards(exportedFolders []string) (map[string]map
 			log.Debugf("considering %s (type: %s; folder: %s)", link.Title, link.Type, link.FolderTitle)
 			// Only process dashboards, not folders
 			if link.Type != "dash-db" {
-				log.Debug("wrong type. ignoring")
+				log.WithField("type", link.Type).Debug("wrong type. ignoring")
 				continue
+			}
+			// Het kind moet toch een naam hebben
+			if link.FolderTitle == "" {
+				link.FolderTitle = "General"
 			}
 			// Only export if the dashboard is in a specified folder
 			if len(exportedFolders) > 0 && validFolder(link.FolderTitle, exportedFolders) == false {
-				log.Debugf("folder not in scope. ignoring")
+				log.WithField("folderTitle", link.FolderTitle).Debug("folder not in scope. ignoring")
 				continue
 			}
 			// Get the dashboard JSON model
 			if rawBoard, _, err = c.GetRawDashboardByUID(ctx, link.UID); err == nil {
-				// Het kind moet toch een naam hebben
-				if link.FolderTitle == "" {
-					link.FolderTitle = "General"
-				}
 				// Reformat the JSON stream to store it properly in YAML
 				var buffer bytes.Buffer
 				_ = json.Indent(&buffer, rawBoard, "", "  ")
