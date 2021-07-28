@@ -1,6 +1,7 @@
 package mock
 
 import (
+	"html"
 	"net/http"
 )
 
@@ -11,7 +12,7 @@ func ServerHandler(w http.ResponseWriter, req *http.Request) {
 	if ok {
 		_, _ = w.Write([]byte(response))
 	} else {
-		http.Error(w, "endpoint not implemented: "+req.URL.Path, http.StatusNotFound)
+		http.Error(w, "endpoint not implemented: "+html.EscapeString(req.URL.Path), http.StatusNotFound)
 	}
 }
 
