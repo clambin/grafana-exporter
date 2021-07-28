@@ -26,7 +26,7 @@ jobs:
     runs-on: ubuntu-latest
     strategy:
       matrix:
-        target: [ grafana-exporter ]
+        target: [ grafana-export ]
         platform: [ linux ]
         arch: [ amd64, arm, arm64 ]
     steps:
@@ -60,15 +60,15 @@ jobs:
       - uses: actions/checkout@v2
       - uses: actions/download-artifact@v2
         with:
-          name: grafana-exporter-linux-arm
+          name: grafana-export-linux-arm
           path: ./bld
       - uses: actions/download-artifact@v2
         with:
-          name: grafana-exporter-linux-arm64
+          name: grafana-export-linux-arm64
           path: ./bld
       - uses: actions/download-artifact@v2
         with:
-          name: grafana-exporter-linux-amd64
+          name: grafana-export-linux-amd64
           path: ./bld
       - name: Fix permissions
         run: chmod +x bld/*
@@ -82,7 +82,7 @@ jobs:
       - uses: docker/metadata-action@v3.4.1
         id: docker_meta
         with:
-          images: ghcr.io/clambin/grafana-exporter
+          images: ghcr.io/clambin/grafana-export
           tags: |
             type=sha
             type=semver,pattern={{version}}

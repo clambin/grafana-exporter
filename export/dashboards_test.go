@@ -1,7 +1,7 @@
-package exporter_test
+package export_test
 
 import (
-	"github.com/clambin/grafana-exporter/exporter"
+	"github.com/clambin/grafana-exporter/export"
 	"github.com/clambin/grafana-exporter/grafana"
 	grafanaMock "github.com/clambin/grafana-exporter/grafana/mock"
 	writerMock "github.com/clambin/grafana-exporter/writer/mock"
@@ -17,7 +17,7 @@ func TestDashboards_K8s(t *testing.T) {
 	defer server.Close()
 	client := grafana.New(server.URL, "")
 
-	err := exporter.Dashboards(client, writer, false, "monitoring", []string{})
+	err := export.Dashboards(client, writer, false, "monitoring", []string{})
 	assert.NoError(t, err)
 
 	content, ok := writer.GetFile(".", "grafana-dashboards-general.yml")
@@ -32,7 +32,7 @@ func TestDashBoards_Direct(t *testing.T) {
 	defer server.Close()
 	client := grafana.New(server.URL, "")
 
-	err := exporter.Dashboards(client, writer, true, "monitoring", []string{})
+	err := export.Dashboards(client, writer, true, "monitoring", []string{})
 	assert.NoError(t, err)
 
 	content, ok := writer.GetFile("folder1", "db-1-1.json")
@@ -51,7 +51,7 @@ func TestDashBoards_Filtered(t *testing.T) {
 
 	client := grafana.New(server.URL, "")
 
-	err := exporter.Dashboards(client, writer, true, "monitoring", []string{"General"})
+	err := export.Dashboards(client, writer, true, "monitoring", []string{"General"})
 	assert.NoError(t, err)
 
 	content, ok := writer.GetFile("folder1", "db-1-1.json")

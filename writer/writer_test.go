@@ -14,7 +14,7 @@ func TestRealWriter_WriteFile(t *testing.T) {
 		t.Fatal()
 	}
 
-	w := writer.NewWriter(tmpdir)
+	w := writer.NewDiskWriter(tmpdir)
 
 	err = w.WriteFile(".", "foo", "bar")
 	assert.NoError(t, err)
@@ -37,7 +37,7 @@ func TestRealWriter_WriteFiles(t *testing.T) {
 	if assert.NoError(t, err) == false {
 		t.Fatal()
 	}
-	w := writer.NewWriter(tmpdir)
+	w := writer.NewDiskWriter(tmpdir)
 
 	files := map[string]string{
 		"foo": "bar",

@@ -1,7 +1,7 @@
-package exporter_test
+package export_test
 
 import (
-	"github.com/clambin/grafana-exporter/exporter"
+	"github.com/clambin/grafana-exporter/export"
 	writerMock "github.com/clambin/grafana-exporter/writer/mock"
 	"github.com/stretchr/testify/assert"
 	"testing"
@@ -10,7 +10,7 @@ import (
 func TestDashboards_Direct(t *testing.T) {
 	writer := &writerMock.Writer{}
 
-	err := exporter.DashboardProvisioning(writer, true, "")
+	err := export.DashboardProvisioning(writer, true, "")
 	assert.NoError(t, err)
 
 	contents, ok := writer.GetFile(".", "dashboards.yml")
@@ -21,7 +21,7 @@ func TestDashboards_Direct(t *testing.T) {
 func TestDashboards_K8S(t *testing.T) {
 	writer := &writerMock.Writer{}
 
-	err := exporter.DashboardProvisioning(writer, false, "monitoring")
+	err := export.DashboardProvisioning(writer, false, "monitoring")
 	assert.NoError(t, err)
 
 	contents, ok := writer.GetFile(".", "grafana-provisioning-dashboards.yml")

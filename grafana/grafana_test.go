@@ -1,6 +1,7 @@
 package grafana_test
 
 import (
+	"context"
 	"github.com/clambin/grafana-exporter/grafana"
 	"github.com/clambin/grafana-exporter/grafana/mock"
 	"github.com/stretchr/testify/assert"
@@ -14,7 +15,8 @@ func TestGetDashboardFolders(t *testing.T) {
 	defer server.Close()
 	client := grafana.New(server.URL, "")
 
-	dashboardMap, err := client.GetAllDashboards([]string{})
+	ctx := context.Background()
+	dashboardMap, err := client.GetAllDashboards(ctx, []string{})
 
 	if assert.Nil(t, err) {
 		assert.Len(t, dashboardMap, 2)
@@ -33,7 +35,7 @@ func TestGetDashboardFolders(t *testing.T) {
 		assert.Equal(t, `"dashboard 1"`, content)
 	}
 
-	dashboardMap, err = client.GetAllDashboards([]string{"folder1"})
+	dashboardMap, err = client.GetAllDashboards(ctx, []string{"folder1"})
 
 	if assert.Nil(t, err) {
 		assert.Len(t, dashboardMap, 1)
@@ -51,12 +53,13 @@ func TestGetDashboardFolders(t *testing.T) {
 
 }
 
-func TestGetDatasources(t *testing.T) {
+func TestGetDataSources(t *testing.T) {
 	server := httptest.NewServer(http.HandlerFunc(mock.ServerHandler))
 	defer server.Close()
 	client := grafana.New(server.URL, "")
 
-	datasourceMap, err := client.GetDatasources()
+	ctx := context.Background()
+	datasourceMap, err := client.GetDataSources(ctx)
 
 	var ok bool
 	assert.Nil(t, err)

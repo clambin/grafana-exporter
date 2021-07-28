@@ -1,7 +1,7 @@
 package main
 
 import (
-	"github.com/clambin/grafana-exporter/exporter"
+	"github.com/clambin/grafana-exporter/export"
 	"github.com/clambin/grafana-exporter/grafana"
 	"github.com/clambin/grafana-exporter/version"
 	"github.com/clambin/grafana-exporter/writer"
@@ -13,7 +13,7 @@ import (
 )
 
 func main() {
-	app := kingpin.New(filepath.Base(os.Args[0]), "grafana provisioning exporter")
+	app := kingpin.New(filepath.Base(os.Args[0]), "grafana provisioning export")
 	debug := app.Flag("debug", "Log debug messages").Short('d').Bool()
 	url := app.Flag("url", "Grafana API URL").Short('u').Required().String()
 	token := app.Flag("token", "Grafana API Token (must have admin access)").Short('t').Required().String()
@@ -35,7 +35,7 @@ func main() {
 		os.Exit(1)
 	}
 
-	log.WithFields(log.Fields{"version": version.BuildVersion, "command": command}).Info("grafana-exporter")
+	log.WithFields(log.Fields{"version": version.BuildVersion, "command": command}).Info("grafana-export")
 
 	if *debug {
 		log.SetLevel(log.DebugLevel)
@@ -52,19 +52,19 @@ func main() {
 	}).Debug()
 
 	grafanaClient := grafana.New(*url, *token)
-	w := writer.NewWriter(*out)
+	w := writer.NewDiskWriter(*out)
 
 	switch command {
 	case datasources.FullCommand():
-		err = exporter.DataSources(grafanaClient, w, *direct, *namespace)
+		err = export.DataSources(grafanaClient, w, *direct, *namespace)
 	case dashboardProvisioning.FullCommand():
-		err = exporter.DashboardProvisioning(w, *direct, *namespace)
+		err = export.DashboardProvisioning(w, *direct, *namespace)
 	case dashboards.FullCommand():
 		var folderList []string
 		if *folders != "" {
 			folderList = strings.Split(*folders, ",")
 		}
-		err = exporter.Dashboards(grafanaClient, w, *direct, *namespace, folderList)
+		err = export.Dashboards(grafanaClient, w, *direct, *namespace, folderList)
 	}
 
 	if err != nil {

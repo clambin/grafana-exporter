@@ -1,4 +1,4 @@
-package exporter
+package export
 
 import (
 	"github.com/clambin/grafana-exporter/configmap"
@@ -18,6 +18,9 @@ providers:
     foldersFromFilesStructure: true
 `
 
+// DashboardProvisioning creates a Grafana provisioning file for dashboard
+//
+// If direct is true, it writes the file directly.  Otherwise, it creates a K8S config map for the specified namespace.
 func DashboardProvisioning(writer writer.Writer, direct bool, namespace string) (err error) {
 	fileName := "dashboards.yml"
 	contents := dashboardProvisioning

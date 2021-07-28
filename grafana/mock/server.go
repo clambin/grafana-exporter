@@ -4,6 +4,7 @@ import (
 	"net/http"
 )
 
+// ServerHandler mocks a Grafana server
 func ServerHandler(w http.ResponseWriter, req *http.Request) {
 	response, ok := responses[req.URL.Path]
 

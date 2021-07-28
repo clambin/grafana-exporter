@@ -1,15 +1,21 @@
-package exporter
+package export
 
 import (
+	"context"
 	"github.com/clambin/grafana-exporter/configmap"
 	"github.com/clambin/grafana-exporter/grafana"
 	"github.com/clambin/grafana-exporter/writer"
 	log "github.com/sirupsen/logrus"
 )
 
+// Dashboards exports dashboards for the specified folders
+//
+// If direct is true, it writes the files directly, using a directory for each folder.
+// Otherwise, it creates a K8S config map for the specified namespace.
 func Dashboards(grafanaClient *grafana.Client, writer writer.Writer, direct bool, namespace string, folders []string) (err error) {
+	ctx := context.Background()
 	var allDashboards map[string]map[string]string
-	allDashboards, err = grafanaClient.GetAllDashboards(folders)
+	allDashboards, err = grafanaClient.GetAllDashboards(ctx, folders)
 
 	if err == nil {
 		for folder, dashboards := range allDashboards {

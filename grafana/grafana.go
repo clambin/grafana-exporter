@@ -48,7 +48,7 @@ func NewWithHTTPClient(url, apiToken string, httpClient *http.Client) *Client {
 // +-> folder-2
 //     +-> dashboard-2.json -> json model of dashboard 2
 //     +-> dashboard-3.json -> json model of dashboard 3
-func (client *Client) GetAllDashboards(exportedFolders []string) (map[string]map[string]string, error) {
+func (client *Client) GetAllDashboards(ctx context.Context, exportedFolders []string) (map[string]map[string]string, error) {
 	var (
 		err         error
 		foundBoards []sdk.FoundBoard
@@ -56,7 +56,6 @@ func (client *Client) GetAllDashboards(exportedFolders []string) (map[string]map
 	)
 	result := make(map[string]map[string]string)
 
-	ctx := context.Background()
 	c := sdk.NewClient(client.url, client.apiToken, client.apiClient)
 
 	// Get all dashboards
@@ -98,17 +97,16 @@ func (client *Client) GetAllDashboards(exportedFolders []string) (map[string]map
 	return result, err
 }
 
-// GetDatasources retrieves all datasources in Grafana.
+// GetDataSources retrieves all dataSources in Grafana.
 // For simplicity, we'll store these in one config file 'datasources.yml'
 // So the returning map will only have one element.
-func (client *Client) GetDatasources() (map[string]string, error) {
+func (client *Client) GetDataSources(ctx context.Context) (map[string]string, error) {
 	var (
 		err         error
 		datasources []sdk.Datasource
 		dsPacked    []byte
 	)
 	result := make(map[string]string)
-	ctx := context.Background()
 	c := sdk.NewClient(client.url, client.apiToken, client.apiClient)
 
 	if datasources, err = c.GetAllDatasources(ctx); err == nil {

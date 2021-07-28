@@ -1,7 +1,7 @@
-package exporter_test
+package export_test
 
 import (
-	"github.com/clambin/grafana-exporter/exporter"
+	"github.com/clambin/grafana-exporter/export"
 	"github.com/clambin/grafana-exporter/grafana"
 	grafanaMock "github.com/clambin/grafana-exporter/grafana/mock"
 	writerMock "github.com/clambin/grafana-exporter/writer/mock"
@@ -17,7 +17,7 @@ func TestDataSources_Direct(t *testing.T) {
 	defer server.Close()
 	client := grafana.New(server.URL, "")
 
-	err := exporter.DataSources(client, writer, true, "")
+	err := export.DataSources(client, writer, true, "")
 	assert.NoError(t, err)
 
 	contents, ok := writer.GetFile(".", "datasources.yml")
@@ -31,7 +31,7 @@ func TestDataSources_K8S(t *testing.T) {
 	defer server.Close()
 	client := grafana.New(server.URL, "")
 
-	err := exporter.DataSources(client, writer, false, "")
+	err := export.DataSources(client, writer, false, "")
 	assert.NoError(t, err)
 
 	contents, ok := writer.GetFile(".", "grafana-provisioning-datasources.yml")
