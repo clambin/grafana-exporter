@@ -5,7 +5,7 @@ go 1.16
 require (
 	github.com/alecthomas/template v0.0.0-20190718012654-fb15b899a751 // indirect
 	github.com/alecthomas/units v0.0.0-20201120081800-1786d5ef83d4 // indirect
-	github.com/gosimple/slug v1.10.0
+	github.com/gosimple/slug v1.11.0
 	github.com/grafana-tools/sdk v0.0.0-20201123153837-5fb28a7aa2ef
 	github.com/kr/pretty v0.1.0 // indirect
 	github.com/sirupsen/logrus v1.8.1
