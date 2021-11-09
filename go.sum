@@ -6,10 +6,10 @@ github.com/davecgh/go-spew v1.1.0/go.mod h1:J7Y8YcW2NihsgmVo/mv3lAwl/skON4iLHjSs
 github.com/davecgh/go-spew v1.1.1 h1:vj9j/u1bqnvCEfJOwUhtlOARqs3+rkHYY13jYWTU97c=
 github.com/davecgh/go-spew v1.1.1/go.mod h1:J7Y8YcW2NihsgmVo/mv3lAwl/skON4iLHjSsI+c5H38=
 github.com/gosimple/slug v1.1.1/go.mod h1:ER78kgg1Mv0NQGlXiDe57DpCyfbNywXXZ9mIorhxAf0=
-github.com/gosimple/slug v1.11.0 h1:QkFeOkXIEDvvtIt++P7cUuO4G9PZVQEgLuYbYZzawMA=
-github.com/gosimple/slug v1.11.0/go.mod h1:MICb3w495l9KNdZm+Xn5b6T2Hn831f9DMxiJ1r+bAjw=
-github.com/gosimple/unidecode v1.0.0 h1:kPdvM+qy0tnk4/BrnkrbdJ82xe88xn7c9hcaipDz4dQ=
-github.com/gosimple/unidecode v1.0.0/go.mod h1:CP0Cr1Y1kogOtx0bJblKzsVWrqYaqfNOnHzpgWw4Awc=
+github.com/gosimple/slug v1.11.2 h1:MxFR0TmQ/qz0KvIrBbf4phu+G0RBgpwxOn6jPKFKFOw=
+github.com/gosimple/slug v1.11.2/go.mod h1:UiRaFH+GEilHstLUmcBgWcI42viBN7mAb818JrYOeFQ=
+github.com/gosimple/unidecode v1.0.1 h1:hZzFTMMqSswvf0LBJZCZgThIZrpDHFXux9KeGmn6T/o=
+github.com/gosimple/unidecode v1.0.1/go.mod h1:CP0Cr1Y1kogOtx0bJblKzsVWrqYaqfNOnHzpgWw4Awc=
 github.com/grafana-tools/sdk v0.0.0-20201123153837-5fb28a7aa2ef h1:pBtpdcXGO5VLXzmOvlnqfxofkw1Ce8CyoV6mAQUJmm4=
 github.com/grafana-tools/sdk v0.0.0-20201123153837-5fb28a7aa2ef/go.mod h1:aqBqJVTJmj0MTX9cP8wuReJPte6HyttMDzSS2u8nJwo=
 github.com/kr/pretty v0.1.0 h1:L/CwN0zerZDmRFUapSPitk6f+Q3+0za1rQkzVuMiMFI=
