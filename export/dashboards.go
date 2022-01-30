@@ -17,26 +17,26 @@ func Dashboards(grafanaClient *grafana.Client, writer writer.Writer, direct bool
 	var allDashboards map[string]map[string]string
 	allDashboards, err = grafanaClient.GetAllDashboards(ctx, folders)
 
-	if err == nil {
-		for folder, dashboards := range allDashboards {
-			if direct {
-				err = writer.WriteFiles(folder, dashboards)
-			} else {
-				var fileName, fileContents string
+	if err != nil {
+		return
+	}
 
-				fileName, fileContents, err = configmap.Serialize("grafana-dashboards-"+folder, namespace, dashboards)
+	for folder, dashboards := range allDashboards {
+		if direct {
+			err = writer.WriteFiles(folder, dashboards)
+		} else {
+			var fileName, fileContents string
 
-				if err == nil {
-					err = writer.WriteFile(".", fileName, fileContents)
-				}
-			}
+			fileName, fileContents, err = configmap.Serialize("grafana-dashboards-"+folder, namespace, folder, dashboards)
 
 			if err == nil {
-				log.Infof("Wrote dashboard file %s", folder)
-			} else {
-				log.WithError(err).Errorf("failed to write dashboard file(s) for %s: %v", folder, err.Error())
+				err = writer.WriteFile(".", fileName, fileContents)
+			}
+			if err != nil {
+				log.WithError(err).WithField("folder", folder).Error("failed to write dashboard file(s)")
 				break
 			}
+			log.WithField("folder", folder).Infof("Wrote dashboard file %s", folder)
 		}
 	}
 

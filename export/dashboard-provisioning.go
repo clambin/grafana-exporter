@@ -26,7 +26,7 @@ func DashboardProvisioning(writer writer.Writer, direct bool, namespace string) 
 	contents := dashboardProvisioning
 
 	if direct == false {
-		fileName, contents, err = configmap.Serialize("grafana-provisioning-dashboards", namespace, map[string]string{fileName: contents})
+		fileName, contents, err = configmap.Serialize("grafana-provisioning-dashboards", namespace, "", map[string]string{fileName: contents})
 	}
 
 	if err == nil {

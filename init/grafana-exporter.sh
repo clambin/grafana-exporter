@@ -33,18 +33,21 @@ git config --global user.name "$GIT_FULL_NAME" || exit 1
 TMPDIR=$(mktemp -d)
 git clone https://"$GIT_USER":"$GIT_TOKEN"@github.com/clambin/gitops.git "$TMPDIR" || exit 1
 
-if [ -n "$BRANCH" ]; then
-  git checkout "$BRANCH"
-fi
-
 cd "$TMPDIR" || exit 1
+
+if [ -n "$BRANCH" ]; then
+  git checkout -b "$BRANCH" --track origin/"$BRANCH"
+fi
 
 if [ -n "$OUT_DATASOURCES" ]; then
   /app/grafana-exporter --out "$OUT_DATASOURCES" --url "$GRAFANA_URL" --token "$GRAFANA_API_KEY" datasources || exit 1
 fi
 
+if [ -n "$OUT_DASHBOARD_PROVISIONING" ]; then
+  /app/grafana-exporter --out "$OUT_DASHBOARD_PROVISIONING" --url "$GRAFANA_URL" --token "$GRAFANA_API_KEY" dashboard-provisioning || exit 1
+fi
+
 if [ -n "$OUT_DASHBOARDS" ]; then
-  /app/grafana-exporter --out "$OUT_DASHBOARDS" --url "$GRAFANA_URL" --token "$GRAFANA_API_KEY" dashboard-provisioning || exit 1
   /app/grafana-exporter --out "$OUT_DASHBOARDS" --url "$GRAFANA_URL" --token "$GRAFANA_API_KEY" dashboards --folders="$GRAFANA_FOLDERS" || exit 1
 fi
 

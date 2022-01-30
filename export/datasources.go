@@ -31,7 +31,7 @@ func DataSources(grafanaClient *grafana.Client, writer writer.Writer, direct boo
 		}
 
 		var fileName, contents string
-		fileName, contents, err = configmap.Serialize("grafana-provisioning-datasources", namespace, dataSources)
+		fileName, contents, err = configmap.Serialize("grafana-provisioning-datasources", namespace, "", dataSources)
 
 		if err == nil {
 			err = writer.WriteFile(".", fileName, contents)

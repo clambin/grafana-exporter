@@ -4,7 +4,7 @@ on:
   push:
     branches-ignore:
       - master
-      - commands
+      - helm
   pull_request_target:
 
 jobs:

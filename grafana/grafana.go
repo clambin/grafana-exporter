@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"context"
 	"encoding/json"
+	"fmt"
 	"github.com/gosimple/slug"
 	"github.com/grafana-tools/sdk"
 	log "github.com/sirupsen/logrus"
@@ -48,53 +49,63 @@ func NewWithHTTPClient(url, apiToken string, httpClient *http.Client) *Client {
 // +-> folder-2
 //     +-> dashboard-2.json -> json model of dashboard 2
 //     +-> dashboard-3.json -> json model of dashboard 3
-func (client *Client) GetAllDashboards(ctx context.Context, exportedFolders []string) (map[string]map[string]string, error) {
-	var (
-		err         error
-		foundBoards []sdk.FoundBoard
-		rawBoard    []byte
-	)
-	result := make(map[string]map[string]string)
-
+func (client *Client) GetAllDashboards(ctx context.Context, exportedFolders []string) (result map[string]map[string]string, err error) {
 	c := sdk.NewClient(client.url, client.apiToken, client.apiClient)
 
 	// Get all dashboards
-	if foundBoards, err = c.Search(ctx, sdk.SearchType(sdk.SearchTypeDashboard)); err == nil {
-		for _, link := range foundBoards {
-			log.Debugf("considering %s (type: %s; folder: %s)", link.Title, link.Type, link.FolderTitle)
-			// Only process dashboards, not folders
-			if link.Type != "dash-db" {
-				log.WithField("type", link.Type).Debug("wrong type. ignoring")
-				continue
-			}
-			// Het kind moet toch een naam hebben
-			if link.FolderTitle == "" {
-				link.FolderTitle = "General"
-			}
-			// Only export if the dashboard is in a specified folder
-			if len(exportedFolders) > 0 && validFolder(link.FolderTitle, exportedFolders) == false {
-				log.WithField("folderTitle", link.FolderTitle).Debug("folder not in scope. ignoring")
-				continue
-			}
-			// Get the dashboard JSON model
-			if rawBoard, _, err = c.GetRawDashboardByUID(ctx, link.UID); err == nil {
-				// Reformat the JSON stream to store it properly in YAML
-				var buffer bytes.Buffer
-				_ = json.Indent(&buffer, rawBoard, "", "  ")
-				// First dashboard for this folder? Create the map
-				if _, ok := result[link.FolderTitle]; ok == false {
-					result[link.FolderTitle] = make(map[string]string)
-				}
-				// Store it in the map
-				result[link.FolderTitle][slug.Make(link.Title)+".json"] = string(buffer.Bytes())
-				log.Debug("Stored")
-			} else {
-				log.Warnf("failed to get dashboard %s: %s", link.Title, err.Error())
-			}
-		}
+	var foundBoards []sdk.FoundBoard
+	foundBoards, err = c.Search(ctx, sdk.SearchType(sdk.SearchTypeDashboard))
+
+	if err != nil {
+		return nil, fmt.Errorf("failed to get dashboard from grafana: %w", err)
 	}
 
-	return result, err
+	result = make(map[string]map[string]string)
+	for _, link := range foundBoards {
+		log.WithFields(log.Fields{
+			"title":  link.Title,
+			"type":   link.Type,
+			"folder": link.FolderTitle,
+		}).Debug("dashboard found")
+
+		// Only process dashboards, not folders
+		if link.Type != "dash-db" {
+			log.WithField("type", link.Type).Debug("wrong type. ignoring")
+			continue
+		}
+
+		// Het kind moet toch een naam hebben
+		if link.FolderTitle == "" {
+			link.FolderTitle = "General"
+		}
+
+		// Only export if the dashboard is in a specified folder
+		if len(exportedFolders) > 0 && validFolder(link.FolderTitle, exportedFolders) == false {
+			log.WithField("folderTitle", link.FolderTitle).Debug("folder not in scope. ignoring")
+			continue
+		}
+		// Get the dashboard JSON model
+		var rawBoard []byte
+		rawBoard, _, err = c.GetRawDashboardByUID(ctx, link.UID)
+		if err != nil {
+			log.Warnf("failed to get dashboard %s: %s", link.Title, err.Error())
+			continue
+		}
+
+		// Reformat the JSON stream to store it properly in YAML
+		var buffer bytes.Buffer
+		_ = json.Indent(&buffer, rawBoard, "", "  ")
+
+		// First dashboard for this folder? Create the map
+		if _, ok := result[link.FolderTitle]; ok == false {
+			result[link.FolderTitle] = make(map[string]string)
+		}
+
+		// Store it in the map
+		result[link.FolderTitle][slug.Make(link.Title)+".json"] = string(buffer.Bytes())
+		log.Debug("Stored")
+	}
+	return
 }
 
 // GetDataSources retrieves all dataSources in Grafana.
