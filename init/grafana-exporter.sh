@@ -33,6 +33,10 @@ git config --global user.name "$GIT_FULL_NAME" || exit 1
 TMPDIR=$(mktemp -d)
 git clone https://"$GIT_USER":"$GIT_TOKEN"@github.com/clambin/gitops.git "$TMPDIR" || exit 1
 
+if [ -n "$BRANCH" ]; then
+  git checkout "$BRANCH"
+fi
+
 cd "$TMPDIR" || exit 1
 
 if [ -n "$OUT_DATASOURCES" ]; then
