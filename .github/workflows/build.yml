@@ -12,24 +12,10 @@ jobs:
     with:
       go-version: 1.17
   build:
-    needs: test
-    runs-on: ubuntu-latest
-    strategy:
-      matrix:
-        target: [ grafana-exporter ]
-        platform: [ linux ]
-        arch: [ amd64, arm, arm64 ]
-    steps:
-      - name: Version number
-        id: vars
-        run: echo ::set-output name=version::${GITHUB_REF##*/}
     uses: clambin/workflows/.github/workflows/build.yaml@main
-      with:
-        go-version: 1.17
-        target: ${{ matrix.target }}
-        goos : ${{ matrix.platform }}
-        goarch: ${{ matrix.arch }}
-        version: ${{ steps.vars.outputs.version }}
+    with:
+      go-version: 1.17
+      target: grafana-exporter
   docker:
     needs: build
     runs-on: ubuntu-latest
