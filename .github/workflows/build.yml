@@ -4,7 +4,7 @@ on:
   push:
     branches:
     - master
-    - helm
+    - workflows
 
 jobs:
   analyse:
