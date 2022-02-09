@@ -60,3 +60,4 @@ jobs:
           labels: ${{ steps.docker_meta.outputs.labels }}
           build-args: |
             BUILD_VERSION=${{ steps.docker_meta.outputs.version }}
+
