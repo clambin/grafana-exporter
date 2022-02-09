@@ -23,3 +23,4 @@ jobs:
     with:
       repo: clambin
       target: grafana-exporter
+
