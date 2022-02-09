@@ -20,29 +20,16 @@ jobs:
         platform: [ linux ]
         arch: [ amd64, arm, arm64 ]
     steps:
-      - uses: actions/checkout@v2
-      - uses: actions/setup-go@v2
-        with:
-          go-version: 1.17
       - name: Version number
         id: vars
-        run: echo ::set-output name=branch::${GITHUB_REF##*/}
-      - name: build
-        env:
-          TARGET: ${{ matrix.target }}
-          PLATFORM: ${{ matrix.platform }}
-          ARCH: ${{ matrix.arch }}
-          RELEASE_VERSION: ${{ steps.vars.outputs.branch }}
-        run: |
-          GOOS=$PLATFORM GOARCH=$ARCH \
-            go build \
-              -ldflags "-X github.com/clambin/grafana-exporter/version.BuildVersion=$RELEASE_VERSION" \
-              -o bld/$TARGET-$PLATFORM-$ARCH \
-              cmd/$TARGET/$TARGET.go
-      - uses: actions/upload-artifact@v2
-        with:
-          name: ${{ matrix.target }}-${{ matrix.platform }}-${{ matrix.arch }}
-          path: ./bld/*
+        run: echo ::set-output name=version::${GITHUB_REF##*/}
+    uses: clambin/workflows/.github/workflows/build.yaml@main
+      with:
+        go-version: 1.17
+        target: ${{ matrix.target }}
+        goos : ${{ matrix.platform }}
+        goarch: ${{ matrix.arch }}
+        version: ${{ steps.vars.outputs.version }}
   docker:
     needs: build
     runs-on: ubuntu-latest
