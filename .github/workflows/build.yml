@@ -4,10 +4,14 @@ on:
   push:
     branches:
     - master
-    - docker
+    - workflows
 
 jobs:
+  test:
+    uses: clambin/workflows/.github/workflows/test.yaml@main
   build:
+    needs:
+      - test
     uses: clambin/workflows/.github/workflows/build.yaml@main
     with:
       target: grafana-exporter

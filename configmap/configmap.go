@@ -7,7 +7,7 @@ import (
 )
 
 // Serialize creates a ConfigMap structure and serializes it into a byte slice
-// so we can store it in a yaml file
+// so that we can store it in a yaml file
 func Serialize(name, namespace, folder string, files map[string]string) (string, string, error) {
 	type metadata struct {
 		Name        string            `yaml:"name"`
