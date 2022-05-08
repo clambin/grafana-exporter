@@ -35,6 +35,6 @@ func main() {
 	err = exporter.Run(grafana.New(cfg.URL, cfg.Token), writer.NewDiskWriter(cfg.Out), cfg)
 
 	if err != nil {
-		log.WithError(err).Error("export failed")
+		log.WithError(err).Fatal("export failed")
 	}
 }
