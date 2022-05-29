@@ -1,6 +1,6 @@
 module github.com/clambin/grafana-exporter
 
-go 1.17
+go 1.18
 
 require (
 	github.com/gosimple/slug v1.12.0
