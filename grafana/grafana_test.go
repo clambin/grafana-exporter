@@ -101,8 +101,8 @@ datasources:
     basicauthpassword: null
     isdefault: false
     jsondata:
-        postgresVersion: 1200
-        sslmode: disable
+      postgresVersion: 1200
+      sslmode: disable
     securejsondata: null
   - id: 7
     orgid: 1

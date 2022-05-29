@@ -57,7 +57,8 @@ func (client *Client) GetAllDashboards(ctx context.Context, exportedFolders []st
 	foundBoards, err = c.Search(ctx, sdk.SearchType(sdk.SearchTypeDashboard))
 
 	if err != nil {
-		return nil, fmt.Errorf("failed to get dashboard from grafana: %w", err)
+		err = fmt.Errorf("failed to get dashboard from grafana: %w", err)
+		return
 	}
 
 	result = make(map[string]map[string]string)
@@ -80,10 +81,11 @@ func (client *Client) GetAllDashboards(ctx context.Context, exportedFolders []st
 		}
 
 		// Only export if the dashboard is in a specified folder
-		if len(exportedFolders) > 0 && validFolder(link.FolderTitle, exportedFolders) == false {
+		if !validFolder(link.FolderTitle, exportedFolders) {
 			log.WithField("folderTitle", link.FolderTitle).Debug("folder not in scope. ignoring")
 			continue
 		}
+
 		// Get the dashboard JSON model
 		var rawBoard []byte
 		rawBoard, _, err = c.GetRawDashboardByUID(ctx, link.UID)
@@ -97,12 +99,12 @@ func (client *Client) GetAllDashboards(ctx context.Context, exportedFolders []st
 		_ = json.Indent(&buffer, rawBoard, "", "  ")
 
 		// First dashboard for this folder? Create the map
-		if _, ok := result[link.FolderTitle]; ok == false {
+		if _, ok := result[link.FolderTitle]; !ok {
 			result[link.FolderTitle] = make(map[string]string)
 		}
 
 		// Store it in the map
-		result[link.FolderTitle][slug.Make(link.Title)+".json"] = string(buffer.Bytes())
+		result[link.FolderTitle][slug.Make(link.Title)+".json"] = buffer.String()
 		log.Debug("Stored")
 	}
 	return
@@ -111,31 +113,40 @@ func (client *Client) GetAllDashboards(ctx context.Context, exportedFolders []st
 // GetDataSources retrieves all dataSources in Grafana.
 // For simplicity, we'll store these in one config file 'datasources.yml'
 // So the returning map will only have one element.
-func (client *Client) GetDataSources(ctx context.Context) (map[string]string, error) {
-	var (
-		err         error
-		datasources []sdk.Datasource
-		dsPacked    []byte
-	)
-	result := make(map[string]string)
+func (client *Client) GetDataSources(ctx context.Context) (result map[string]string, err error) {
 	c := sdk.NewClient(client.url, client.apiToken, client.apiClient)
 
-	if datasources, err = c.GetAllDatasources(ctx); err == nil {
-		// datasource provisioning uses apiVersion / datasources layout
-		type dataSource struct {
-			APIVersion  int              `yaml:"apiVersion"`
-			Datasources []sdk.Datasource `yaml:"datasources"`
-		}
-		var wrapper = dataSource{1, datasources}
-
-		if dsPacked, err = yaml.Marshal(&wrapper); err == nil {
-			result["datasources.yml"] = string(dsPacked)
-		}
+	var dataSources []sdk.Datasource
+	if dataSources, err = c.GetAllDatasources(ctx); err != nil {
+		return
 	}
-	return result, err
+
+	wrapper := struct {
+		APIVersion  int              `yaml:"apiVersion"`
+		DataSources []sdk.Datasource `yaml:"datasources"`
+	}{
+		APIVersion:  1,
+		DataSources: dataSources,
+	}
+
+	var buffer bytes.Buffer
+	encoder := yaml.NewEncoder(&buffer)
+	encoder.SetIndent(2)
+
+	err = encoder.Encode(&wrapper)
+	_ = encoder.Close()
+
+	if err == nil {
+		result = map[string]string{"datasources.yml": buffer.String()}
+	}
+
+	return
 }
 
 func validFolder(folder string, folders []string) bool {
+	if len(folders) == 0 {
+		return true
+	}
 	for _, f := range folders {
 		if f == folder {
 			return true
