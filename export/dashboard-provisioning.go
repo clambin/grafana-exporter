@@ -25,7 +25,7 @@ func DashboardProvisioning(writer writer.Writer, direct bool, namespace string) 
 	fileName := "dashboards.yml"
 	contents := dashboardProvisioning
 
-	if direct == false {
+	if !direct {
 		fileName, contents, err = configmap.Serialize("grafana-provisioning-dashboards", namespace, "", map[string]string{fileName: contents})
 	}
 

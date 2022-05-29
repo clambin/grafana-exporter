@@ -19,7 +19,7 @@ func (w *Writer) WriteFile(directory, file, content string) (err error) {
 		w.files = make(map[string]map[string]string)
 	}
 
-	if _, ok := w.files[directory]; ok == false {
+	if _, ok := w.files[directory]; !ok {
 		w.files[directory] = make(map[string]string)
 	}
 

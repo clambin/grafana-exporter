@@ -54,10 +54,10 @@ func TestDashBoards_Filtered(t *testing.T) {
 	err := export.Dashboards(client, writer, true, "monitoring", []string{"General"})
 	require.NoError(t, err)
 
-	content, ok := writer.GetFile("folder1", "db-1-1.json")
-	assert.False(t, ok)
-
-	content, ok = writer.GetFile("General", "db-0-1.json")
+	content, ok := writer.GetFile("General", "db-0-1.json")
 	require.True(t, ok)
 	assert.Contains(t, content, "dashboard 2")
+
+	_, ok = writer.GetFile("folder1", "db-1-1.json")
+	assert.False(t, ok)
 }
