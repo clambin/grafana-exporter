@@ -6,7 +6,7 @@ require (
 	github.com/gosimple/slug v1.12.0
 	github.com/grafana-tools/sdk v0.0.0-20201123153837-5fb28a7aa2ef
 	github.com/sirupsen/logrus v1.8.1
-	github.com/stretchr/testify v1.7.3
+	github.com/stretchr/testify v1.7.4
 	gopkg.in/alecthomas/kingpin.v2 v2.2.6
 	gopkg.in/yaml.v3 v3.0.1
 )
