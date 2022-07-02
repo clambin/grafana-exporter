@@ -75,7 +75,7 @@ const (
     "type": "grafana-simple-json-datasource",
     "typeLogoUrl": "public/plugins/grafana-simple-json-datasource/img/simpleJson_logo.svg",
     "access": "proxy",
-    "url": "http://example.com:5000",
+    "url": "http://datasource.default:5000",
     "password": "",
     "user": "",
     "database": "",
