@@ -5,6 +5,7 @@ import (
 	"github.com/clambin/grafana-exporter/grafana"
 	grafanaMock "github.com/clambin/grafana-exporter/grafana/mock"
 	writerMock "github.com/clambin/grafana-exporter/writer/mock"
+	"github.com/gosimple/slug"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 	"net/http"
@@ -14,86 +15,72 @@ import (
 	"testing"
 )
 
-func TestDashboards_K8s(t *testing.T) {
-	writer := &writerMock.Writer{}
+func TestDashboards(t *testing.T) {
 	server := httptest.NewServer(http.HandlerFunc(grafanaMock.ServerHandler))
 	defer server.Close()
 	client := grafana.New(server.URL, "")
-	err := export.Dashboards(client, writer, false, "monitoring", []string{})
-	require.NoError(t, err)
-	contents, ok := writer.GetFile(".", "grafana-dashboards-general.yml")
-	require.True(t, ok)
 
-	gp := filepath.Join("testdata", t.Name()+".golden")
-	if *update {
-		err = os.WriteFile(gp, []byte(contents), 0644)
-		require.NoError(t, err)
+	testCases := []struct {
+		name    string
+		direct  bool
+		folders []string
+		pass    bool
+		files   map[string][]string
+	}{
+		{
+			name:   "k8s",
+			direct: false,
+			pass:   true,
+			files:  map[string][]string{".": {"grafana-dashboards-general.yml", "grafana-dashboards-folder1.yml"}},
+		},
+		{
+			name:   "direct",
+			direct: true,
+			pass:   true,
+			files: map[string][]string{
+				"folder1": {"db-1-1.json"},
+				"General": {"db-0-1.json"},
+			},
+		},
+		{
+			name:    "filtered",
+			direct:  false,
+			pass:    true,
+			folders: []string{"folder1"},
+			files:   map[string][]string{".": {"grafana-dashboards-folder1.yml"}},
+		},
 	}
 
-	var golden []byte
-	golden, err = os.ReadFile(gp)
-	require.NoError(t, err)
-	assert.Equal(t, string(golden), contents)
-}
+	for _, tt := range testCases {
+		w := writerMock.Writer{}
 
-func TestDashBoards_Direct(t *testing.T) {
-	writer := &writerMock.Writer{}
-	server := httptest.NewServer(http.HandlerFunc(grafanaMock.ServerHandler))
-	defer server.Close()
-	client := grafana.New(server.URL, "")
-	err := export.Dashboards(client, writer, true, "monitoring", []string{})
-	require.NoError(t, err)
+		if err := export.Dashboards(client, &w, tt.direct, "namespace", tt.folders); !tt.pass {
+			assert.Error(t, err, tt.name)
+			continue
+		} else {
+			require.NoError(t, err, tt.name)
+		}
 
-	contents, ok := writer.GetFile("folder1", "db-1-1.json")
-	require.True(t, ok)
+		for dir, files := range tt.files {
+			count, found := w.Count(dir)
+			require.True(t, found, tt.name+": "+dir)
+			assert.Equal(t, len(tt.files[dir]), count)
 
-	gp := filepath.Join("testdata", t.Name()+"_folder1.golden")
-	if *update {
-		err = os.WriteFile(gp, []byte(contents), 0644)
-		require.NoError(t, err)
+			for _, file := range files {
+				var content string
+				content, found = w.GetFile(dir, file)
+				require.True(t, found, tt.name+": "+dir+"/"+file)
+
+				assert.NotEmpty(t, content, tt.name)
+
+				gp := filepath.Join("testdata", t.Name()+"_"+tt.name+"_"+slug.Make(dir)+"_"+slug.Make(file)+".golden")
+				if *update {
+					require.NoError(t, os.WriteFile(gp, []byte(content), 0644))
+				}
+				golden, err := os.ReadFile(gp)
+				require.NoError(t, err)
+				assert.Equal(t, string(golden), content)
+			}
+		}
 	}
-
-	var golden []byte
-	golden, err = os.ReadFile(gp)
-	require.NoError(t, err)
-	assert.Equal(t, string(golden), contents)
-
-	contents, ok = writer.GetFile("General", "db-0-1.json")
-	require.True(t, ok)
-
-	gp = filepath.Join("testdata", t.Name()+"_General.golden")
-	if *update {
-		err = os.WriteFile(gp, []byte(contents), 0644)
-		require.NoError(t, err)
-	}
-
-	golden, err = os.ReadFile(gp)
-	require.NoError(t, err)
-	assert.Equal(t, string(golden), contents)
-}
-
-func TestDashBoards_Filtered(t *testing.T) {
-	writer := &writerMock.Writer{}
-	server := httptest.NewServer(http.HandlerFunc(grafanaMock.ServerHandler))
-	defer server.Close()
-	client := grafana.New(server.URL, "")
-	err := export.Dashboards(client, writer, true, "monitoring", []string{"General"})
-	require.NoError(t, err)
-
-	contents, ok := writer.GetFile("General", "db-0-1.json")
-	require.True(t, ok)
-
-	gp := filepath.Join("testdata", t.Name()+"_General.golden")
-	if *update {
-		err = os.WriteFile(gp, []byte(contents), 0644)
-		require.NoError(t, err)
-	}
-
-	var golden []byte
-	golden, err = os.ReadFile(gp)
-	require.NoError(t, err)
-	assert.Equal(t, string(golden), contents)
-
-	_, ok = writer.GetFile("folder1", "db-1-1.json")
-	assert.False(t, ok)
 }

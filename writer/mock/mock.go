@@ -44,3 +44,15 @@ func (w *Writer) GetFile(directory, file string) (content string, ok bool) {
 
 	return
 }
+
+// Count returns the number of files in a directory
+func (w *Writer) Count(directory string) (count int, ok bool) {
+	if w.files == nil {
+		return 0, false
+	}
+	var dir map[string]string
+	if dir, ok = w.files[directory]; ok {
+		count = len(dir)
+	}
+	return
+}

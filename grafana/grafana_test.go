@@ -75,7 +75,7 @@ datasources:
     name: foo
     type: grafana-simple-json-datasource
     access: proxy
-    url: http://example.com:5000
+    url: http://datasource.default:5000
     password: ""
     user: ""
     database: ""

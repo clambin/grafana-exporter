@@ -2,7 +2,7 @@ kind: ConfigMap
 apiVersion: v1
 metadata:
   name: grafana-dashboards-general
-  namespace: monitoring
+  namespace: namespace
   labels:
     grafana_dashboard: ""
   annotations:
