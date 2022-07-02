@@ -1,6 +1,7 @@
 package exporter
 
 import (
+	log "github.com/sirupsen/logrus"
 	"gopkg.in/alecthomas/kingpin.v2"
 	"path/filepath"
 	"strings"
@@ -24,8 +25,8 @@ const (
 	cmdDashboardProvisioning = "dashboard-provisioning"
 )
 
-// GetConfiguration parses the command line arguments. If showErrors is true, any errors are displayed
-func GetConfiguration(args []string, showErrors bool) (cfg *Configuration, err error) {
+// getConfiguration parses the command line arguments. If showErrors is true, any errors are displayed
+func getConfiguration(args []string, showErrors bool) (cfg *Configuration, err error) {
 	cfg = new(Configuration)
 
 	app := kingpin.New(filepath.Base(args[0]), "grafana provisioning export")
@@ -53,6 +54,16 @@ func GetConfiguration(args []string, showErrors bool) (cfg *Configuration, err e
 	if err != nil && showErrors {
 		app.Usage(args[1:])
 	}
+
+	log.WithFields(log.Fields{
+		"command":   cfg.Command,
+		"url":       cfg.URL,
+		"token":     cfg.Token,
+		"out":       cfg.Out,
+		"direct":    cfg.Direct,
+		"namespace": cfg.Namespace,
+		"folders":   cfg.Folders,
+	}).Debug()
 
 	return
 }

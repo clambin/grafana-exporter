@@ -9,6 +9,8 @@ import (
 	"github.com/stretchr/testify/require"
 	"net/http"
 	"net/http/httptest"
+	"os"
+	"path/filepath"
 	"testing"
 )
 
@@ -17,13 +19,21 @@ func TestDashboards_K8s(t *testing.T) {
 	server := httptest.NewServer(http.HandlerFunc(grafanaMock.ServerHandler))
 	defer server.Close()
 	client := grafana.New(server.URL, "")
-
 	err := export.Dashboards(client, writer, false, "monitoring", []string{})
 	require.NoError(t, err)
-
-	content, ok := writer.GetFile(".", "grafana-dashboards-general.yml")
+	contents, ok := writer.GetFile(".", "grafana-dashboards-general.yml")
 	require.True(t, ok)
-	assert.Contains(t, content, "namespace: monitoring")
+
+	gp := filepath.Join("testdata", t.Name()+".golden")
+	if *update {
+		err = os.WriteFile(gp, []byte(contents), 0644)
+		require.NoError(t, err)
+	}
+
+	var golden []byte
+	golden, err = os.ReadFile(gp)
+	require.NoError(t, err)
+	assert.Equal(t, string(golden), contents)
 }
 
 func TestDashBoards_Direct(t *testing.T) {
@@ -31,32 +41,58 @@ func TestDashBoards_Direct(t *testing.T) {
 	server := httptest.NewServer(http.HandlerFunc(grafanaMock.ServerHandler))
 	defer server.Close()
 	client := grafana.New(server.URL, "")
-
 	err := export.Dashboards(client, writer, true, "monitoring", []string{})
 	require.NoError(t, err)
 
-	content, ok := writer.GetFile("folder1", "db-1-1.json")
+	contents, ok := writer.GetFile("folder1", "db-1-1.json")
 	require.True(t, ok)
-	assert.Contains(t, content, "dashboard 1")
 
-	content, ok = writer.GetFile("General", "db-0-1.json")
+	gp := filepath.Join("testdata", t.Name()+"_folder1.golden")
+	if *update {
+		err = os.WriteFile(gp, []byte(contents), 0644)
+		require.NoError(t, err)
+	}
+
+	var golden []byte
+	golden, err = os.ReadFile(gp)
+	require.NoError(t, err)
+	assert.Equal(t, string(golden), contents)
+
+	contents, ok = writer.GetFile("General", "db-0-1.json")
 	require.True(t, ok)
-	assert.Contains(t, content, "dashboard 2")
+
+	gp = filepath.Join("testdata", t.Name()+"_General.golden")
+	if *update {
+		err = os.WriteFile(gp, []byte(contents), 0644)
+		require.NoError(t, err)
+	}
+
+	golden, err = os.ReadFile(gp)
+	require.NoError(t, err)
+	assert.Equal(t, string(golden), contents)
 }
 
 func TestDashBoards_Filtered(t *testing.T) {
 	writer := &writerMock.Writer{}
 	server := httptest.NewServer(http.HandlerFunc(grafanaMock.ServerHandler))
 	defer server.Close()
-
 	client := grafana.New(server.URL, "")
-
 	err := export.Dashboards(client, writer, true, "monitoring", []string{"General"})
 	require.NoError(t, err)
 
-	content, ok := writer.GetFile("General", "db-0-1.json")
+	contents, ok := writer.GetFile("General", "db-0-1.json")
 	require.True(t, ok)
-	assert.Contains(t, content, "dashboard 2")
+
+	gp := filepath.Join("testdata", t.Name()+"_General.golden")
+	if *update {
+		err = os.WriteFile(gp, []byte(contents), 0644)
+		require.NoError(t, err)
+	}
+
+	var golden []byte
+	golden, err = os.ReadFile(gp)
+	require.NoError(t, err)
+	assert.Equal(t, string(golden), contents)
 
 	_, ok = writer.GetFile("folder1", "db-1-1.json")
 	assert.False(t, ok)

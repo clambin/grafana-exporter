@@ -1,8 +1,8 @@
 package exporter_test
 
 import (
+	"fmt"
 	"github.com/clambin/grafana-exporter/exporter"
-	"github.com/clambin/grafana-exporter/grafana"
 	grafanaMock "github.com/clambin/grafana-exporter/grafana/mock"
 	writerMock "github.com/clambin/grafana-exporter/writer/mock"
 	"github.com/stretchr/testify/assert"
@@ -12,11 +12,41 @@ import (
 	"testing"
 )
 
+func TestNewFromArgs(t *testing.T) {
+	testCases := []struct {
+		args []string
+		pass bool
+	}{
+		{
+			args: []string{"unittest", "--out", "outdir", "--url", "http://localhost:8888", "--token", "GRAFANA_API_KEY", "dashboards", "--folders", "A,B,C"},
+			pass: true,
+		},
+		{
+			args: []string{"unittest", "--out", "outdir", "datasources"},
+			pass: false,
+		},
+		{
+			args: []string{"unittest", "--out", "outdir", "--url", "http://localhost:8888", "--token", "GRAFANA_API_KEY", "foo"},
+			pass: false,
+		},
+	}
+
+	for index, tt := range testCases {
+		name := fmt.Sprintf("testcase %d", index+1)
+
+		e, err := exporter.NewFromArgs(tt.args, false)
+		if !tt.pass {
+			assert.Error(t, err, name)
+			continue
+		}
+		require.NoError(t, err, name)
+		assert.NotNil(t, e, name)
+	}
+}
+
 func TestRun_Dashboards(t *testing.T) {
 	server := httptest.NewServer(http.HandlerFunc(grafanaMock.ServerHandler))
 	defer server.Close()
-
-	w := &writerMock.Writer{}
 
 	args := []string{
 		"unittest",
@@ -27,11 +57,13 @@ func TestRun_Dashboards(t *testing.T) {
 		"dashboards",
 	}
 
-	cfg, err := exporter.GetConfiguration(args, false)
+	e, err := exporter.NewFromArgs(args, false)
 	require.NoError(t, err)
 
-	client := grafana.New(cfg.URL, cfg.Token)
-	err = exporter.Run(client, w, cfg)
+	w := &writerMock.Writer{}
+	e.Writer = w
+
+	err = e.Run()
 	require.NoError(t, err)
 
 	_, ok := w.GetFile("folder1", "db-1-1.json")
@@ -45,8 +77,6 @@ func TestRun_DashboardProvisioning(t *testing.T) {
 	server := httptest.NewServer(http.HandlerFunc(grafanaMock.ServerHandler))
 	defer server.Close()
 
-	w := &writerMock.Writer{}
-
 	args := []string{
 		"unittest",
 		"--out", ".",
@@ -56,13 +86,14 @@ func TestRun_DashboardProvisioning(t *testing.T) {
 		"dashboard-provisioning",
 	}
 
-	cfg, err := exporter.GetConfiguration(args, false)
+	e, err := exporter.NewFromArgs(args, false)
 	require.NoError(t, err)
 
-	client := grafana.New(cfg.URL, cfg.Token)
-	err = exporter.Run(client, w, cfg)
-	require.NoError(t, err)
+	w := &writerMock.Writer{}
+	e.Writer = w
 
+	err = e.Run()
+	require.NoError(t, err)
 	_, ok := w.GetFile(".", "dashboards.yml")
 	assert.True(t, ok)
 }
@@ -70,8 +101,6 @@ func TestRun_DashboardProvisioning(t *testing.T) {
 func TestRun_DataSources(t *testing.T) {
 	server := httptest.NewServer(http.HandlerFunc(grafanaMock.ServerHandler))
 	defer server.Close()
-
-	w := &writerMock.Writer{}
 
 	args := []string{
 		"unittest",
@@ -82,15 +111,14 @@ func TestRun_DataSources(t *testing.T) {
 		"datasources",
 	}
 
-	cfg, err := exporter.GetConfiguration(args, false)
-	if assert.NoError(t, err) == false {
-		t.Fail()
-	}
-	client := grafana.New(cfg.URL, cfg.Token)
-	err = exporter.Run(client, w, cfg)
-	if assert.NoError(t, err) == false {
-		t.Fail()
-	}
+	e, err := exporter.NewFromArgs(args, false)
+	require.NoError(t, err)
+
+	w := &writerMock.Writer{}
+	e.Writer = w
+
+	err = e.Run()
+	require.NoError(t, err)
 
 	_, ok := w.GetFile(".", "datasources.yml")
 	assert.True(t, ok)
