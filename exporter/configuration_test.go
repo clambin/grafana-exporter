@@ -3,6 +3,7 @@ package exporter_test
 import (
 	"github.com/clambin/grafana-exporter/exporter"
 	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 	"testing"
 )
 
@@ -17,17 +18,16 @@ func TestGetConfiguration(t *testing.T) {
 	}
 
 	cfg, err := exporter.GetConfiguration(args, true)
-	assert.NoError(t, err)
+	require.NoError(t, err)
 	assert.Equal(t, "outdir", cfg.Out)
 	assert.Equal(t, "http://localhost:8888", cfg.URL)
 	assert.Equal(t, "GRAFANA_API_KEY", cfg.Token)
 	assert.False(t, cfg.Direct)
 	assert.Equal(t, "monitoring", cfg.Namespace)
-	if assert.Len(t, cfg.Folders, 3) {
-		assert.Contains(t, cfg.Folders, "A")
-		assert.Contains(t, cfg.Folders, "B")
-		assert.Contains(t, cfg.Folders, "C")
-	}
+	require.Len(t, cfg.Folders, 3)
+	assert.Contains(t, cfg.Folders, "A")
+	assert.Contains(t, cfg.Folders, "B")
+	assert.Contains(t, cfg.Folders, "C")
 }
 
 func TestGetConfiguration_NoFolders(t *testing.T) {
@@ -40,7 +40,7 @@ func TestGetConfiguration_NoFolders(t *testing.T) {
 	}
 
 	cfg, err := exporter.GetConfiguration(args, true)
-	assert.NoError(t, err)
+	require.NoError(t, err)
 	assert.Equal(t, "outdir", cfg.Out)
 	assert.Equal(t, "http://localhost:8888", cfg.URL)
 	assert.Equal(t, "GRAFANA_API_KEY", cfg.Token)

@@ -6,6 +6,7 @@ import (
 	grafanaMock "github.com/clambin/grafana-exporter/grafana/mock"
 	writerMock "github.com/clambin/grafana-exporter/writer/mock"
 	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 	"net/http"
 	"net/http/httptest"
 	"testing"
@@ -27,14 +28,11 @@ func TestRun_Dashboards(t *testing.T) {
 	}
 
 	cfg, err := exporter.GetConfiguration(args, false)
-	if assert.NoError(t, err) == false {
-		t.Fail()
-	}
+	require.NoError(t, err)
+
 	client := grafana.New(cfg.URL, cfg.Token)
 	err = exporter.Run(client, w, cfg)
-	if assert.NoError(t, err) == false {
-		t.Fail()
-	}
+	require.NoError(t, err)
 
 	_, ok := w.GetFile("folder1", "db-1-1.json")
 	assert.True(t, ok)
@@ -59,14 +57,11 @@ func TestRun_DashboardProvisioning(t *testing.T) {
 	}
 
 	cfg, err := exporter.GetConfiguration(args, false)
-	if assert.NoError(t, err) == false {
-		t.Fail()
-	}
+	require.NoError(t, err)
+
 	client := grafana.New(cfg.URL, cfg.Token)
 	err = exporter.Run(client, w, cfg)
-	if assert.NoError(t, err) == false {
-		t.Fail()
-	}
+	require.NoError(t, err)
 
 	_, ok := w.GetFile(".", "dashboards.yml")
 	assert.True(t, ok)

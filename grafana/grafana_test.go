@@ -5,6 +5,7 @@ import (
 	"github.com/clambin/grafana-exporter/grafana"
 	"github.com/clambin/grafana-exporter/grafana/mock"
 	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 	"net/http"
 	"net/http/httptest"
 	"testing"
@@ -17,39 +18,36 @@ func TestGetDashboardFolders(t *testing.T) {
 
 	ctx := context.Background()
 	dashboardMap, err := client.GetAllDashboards(ctx, []string{})
+	require.NoError(t, err)
+	require.Len(t, dashboardMap, 2)
 
-	if assert.Nil(t, err) {
-		assert.Len(t, dashboardMap, 2)
-		folder, ok := dashboardMap["General"]
-		assert.True(t, ok)
-		assert.Len(t, folder, 1)
-		var content string
-		content, ok = folder["db-0-1.json"]
-		assert.True(t, ok)
-		assert.Equal(t, `"dashboard 2"`, content)
-		folder, ok = dashboardMap["folder1"]
-		assert.True(t, ok)
-		assert.Len(t, folder, 1)
-		content, ok = folder["db-1-1.json"]
-		assert.True(t, ok)
-		assert.Equal(t, `"dashboard 1"`, content)
-	}
+	var content string
+	folder, ok := dashboardMap["General"]
+	require.True(t, ok)
+	assert.Len(t, folder, 1)
+	content, ok = folder["db-0-1.json"]
+	require.True(t, ok)
+	assert.Equal(t, `"dashboard 2"`, content)
+
+	folder, ok = dashboardMap["folder1"]
+	require.True(t, ok)
+	require.Len(t, folder, 1)
+	content, ok = folder["db-1-1.json"]
+	require.True(t, ok)
+	assert.Equal(t, `"dashboard 1"`, content)
 
 	dashboardMap, err = client.GetAllDashboards(ctx, []string{"folder1"})
+	require.Nil(t, err)
+	require.Len(t, dashboardMap, 1)
 
-	if assert.Nil(t, err) {
-		assert.Len(t, dashboardMap, 1)
-		_, ok := dashboardMap["General"]
-		assert.False(t, ok)
-		var folder map[string]string
-		folder, ok = dashboardMap["folder1"]
-		assert.True(t, ok)
-		assert.Len(t, folder, 1)
-		var content string
-		content, ok = folder["db-1-1.json"]
-		assert.True(t, ok)
-		assert.Equal(t, `"dashboard 1"`, content)
-	}
+	_, ok = dashboardMap["General"]
+	assert.False(t, ok)
+	folder, ok = dashboardMap["folder1"]
+	require.True(t, ok)
+	require.Len(t, folder, 1)
+	content, ok = folder["db-1-1.json"]
+	require.True(t, ok)
+	assert.Equal(t, `"dashboard 1"`, content)
 
 }
 
@@ -62,8 +60,8 @@ func TestGetDataSources(t *testing.T) {
 	datasourceMap, err := client.GetDataSources(ctx)
 
 	var ok bool
-	assert.Nil(t, err)
-	assert.Len(t, datasourceMap, 1)
+	require.NoError(t, err)
+	require.Len(t, datasourceMap, 1)
 	content, ok := datasourceMap["datasources.yml"]
 	assert.True(t, ok)
 	assert.Equal(t, expected, content)

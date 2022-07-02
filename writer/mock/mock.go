@@ -1,9 +1,13 @@
 package mock
 
+import "github.com/clambin/grafana-exporter/writer"
+
 // Writer mocks the Writer to record files written during unit testing
 type Writer struct {
 	files map[string]map[string]string
 }
+
+var _ writer.Writer = &Writer{}
 
 // WriteFiles saves files to the specified directory
 func (w *Writer) WriteFiles(directory string, files map[string]string) (err error) {
