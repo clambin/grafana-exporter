@@ -84,3 +84,17 @@ func TestDashboards(t *testing.T) {
 		}
 	}
 }
+
+func TestDashboards_Failures(t *testing.T) {
+	server := httptest.NewServer(http.HandlerFunc(grafanaMock.ServerHandler))
+	defer server.Close()
+	client := grafana.New(server.URL, "")
+
+	w := &writerMock.Writer{Fail: true}
+	err := export.Dashboards(client, w, false, "namespace", nil)
+	assert.Error(t, err)
+
+	server.Close()
+	err = export.Dashboards(client, w, false, "namespace", nil)
+	assert.Error(t, err)
+}

@@ -2,6 +2,7 @@ package export
 
 import (
 	"context"
+	"fmt"
 	"github.com/clambin/grafana-exporter/configmap"
 	"github.com/clambin/grafana-exporter/grafana"
 	"github.com/clambin/grafana-exporter/writer"
@@ -18,7 +19,7 @@ func Dashboards(grafanaClient *grafana.Client, writer writer.Writer, direct bool
 	allDashboards, err = grafanaClient.GetAllDashboards(ctx, folders)
 
 	if err != nil {
-		return
+		return fmt.Errorf("failed to get grafana dashboards: %w", err)
 	}
 
 	for folder, dashboards := range allDashboards {

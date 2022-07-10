@@ -1,9 +1,13 @@
 package mock
 
-import "github.com/clambin/grafana-exporter/writer"
+import (
+	"errors"
+	"github.com/clambin/grafana-exporter/writer"
+)
 
 // Writer mocks the Writer to record files written during unit testing
 type Writer struct {
+	Fail  bool
 	files map[string]map[string]string
 }
 
@@ -11,6 +15,10 @@ var _ writer.Writer = &Writer{}
 
 // WriteFiles saves files to the specified directory
 func (w *Writer) WriteFiles(directory string, files map[string]string) (err error) {
+	if w.Fail {
+		return errors.New("fail")
+	}
+
 	for name, content := range files {
 		_ = w.WriteFile(directory, name, content)
 	}
@@ -19,6 +27,10 @@ func (w *Writer) WriteFiles(directory string, files map[string]string) (err erro
 
 // WriteFile saves one file to the specified directory
 func (w *Writer) WriteFile(directory, file, content string) (err error) {
+	if w.Fail {
+		return errors.New("fail")
+	}
+
 	if w.files == nil {
 		w.files = make(map[string]map[string]string)
 	}

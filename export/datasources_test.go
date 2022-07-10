@@ -57,3 +57,13 @@ func TestDataSources_K8S(t *testing.T) {
 	require.NoError(t, err)
 	assert.Equal(t, string(golden), contents)
 }
+
+func TestDataSources_Failures(t *testing.T) {
+	writer := &writerMock.Writer{}
+	server := httptest.NewServer(http.HandlerFunc(grafanaMock.ServerHandler))
+	client := grafana.New(server.URL, "")
+	server.Close()
+
+	err := export.DataSources(client, writer, false, "")
+	assert.Error(t, err)
+}
