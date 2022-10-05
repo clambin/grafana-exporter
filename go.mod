@@ -3,7 +3,7 @@ module github.com/clambin/grafana-exporter
 go 1.18
 
 require (
-	github.com/gosimple/slug v1.13.0
+	github.com/gosimple/slug v1.13.1
 	github.com/grafana-tools/sdk v0.0.0-20201123153837-5fb28a7aa2ef
 	github.com/sirupsen/logrus v1.9.0
 	github.com/stretchr/testify v1.8.0
