@@ -6,7 +6,7 @@ import (
 	"github.com/clambin/grafana-exporter/configmap"
 	"github.com/clambin/grafana-exporter/grafana"
 	"github.com/clambin/grafana-exporter/writer"
-	log "github.com/sirupsen/logrus"
+	"golang.org/x/exp/slog"
 )
 
 // Dashboards exports dashboards for the specified folders
@@ -34,10 +34,10 @@ func Dashboards(grafanaClient *grafana.Client, writer writer.Writer, direct bool
 				err = writer.WriteFile(".", fileName, fileContents)
 			}
 			if err != nil {
-				log.WithError(err).WithField("folder", folder).Error("failed to write dashboard file(s)")
+				slog.Error("failed to write dashboard file(s)", err, "folder", folder)
 				break
 			}
-			log.WithField("folder", folder).Infof("Wrote dashboard file %s", folder)
+			slog.Info("Wrote dashboard file", "folder", folder)
 		}
 	}
 

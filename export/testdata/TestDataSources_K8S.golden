@@ -9,14 +9,17 @@ data:
     datasources:
       - id: 5
         orgid: 1
+        uid: ""
         name: foo
         type: grafana-simple-json-datasource
+        typelogourl: public/plugins/grafana-simple-json-datasource/img/simpleJson_logo.svg
         access: proxy
         url: http://datasource.default:5000
         password: ""
         user: ""
         database: ""
         basicauth: false
+        readonly: true
         basicauthuser: null
         basicauthpassword: null
         isdefault: false
@@ -24,14 +27,17 @@ data:
         securejsondata: null
       - id: 3
         orgid: 1
+        uid: ""
         name: bar
         type: postgres
+        typelogourl: public/app/plugins/datasource/postgres/img/postgresql_logo.svg
         access: proxy
         url: http://postgres.default:5432
         password: ""
         user: grafana
         database: bar
         basicauth: false
+        readonly: true
         basicauthuser: null
         basicauthpassword: null
         isdefault: false
@@ -41,14 +47,17 @@ data:
         securejsondata: null
       - id: 7
         orgid: 1
+        uid: ""
         name: Prometheus
         type: prometheus
+        typelogourl: public/app/plugins/datasource/prometheus/img/prometheus_logo.svg
         access: proxy
         url: http://monitoring-prometheus-mock.monitoring.svc:80
         password: ""
         user: ""
         database: ""
         basicauth: false
+        readonly: true
         basicauthuser: null
         basicauthpassword: null
         isdefault: true

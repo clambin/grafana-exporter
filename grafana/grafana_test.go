@@ -2,14 +2,20 @@ package grafana_test
 
 import (
 	"context"
+	"flag"
 	"github.com/clambin/grafana-exporter/grafana"
 	"github.com/clambin/grafana-exporter/grafana/mock"
+	"github.com/gosimple/slug"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 	"net/http"
 	"net/http/httptest"
+	"os"
+	"path/filepath"
 	"testing"
 )
+
+var update = flag.Bool("update", false, "update .golden files")
 
 func TestGetDashboardFolders(t *testing.T) {
 	server := httptest.NewServer(http.HandlerFunc(mock.ServerHandler))
@@ -63,59 +69,16 @@ func TestGetDataSources(t *testing.T) {
 	require.NoError(t, err)
 	require.Len(t, datasourceMap, 1)
 	content, ok := datasourceMap["datasources.yml"]
-	assert.True(t, ok)
-	assert.Equal(t, expected, content)
-}
 
-const (
-	expected = `apiVersion: 1
-datasources:
-  - id: 5
-    orgid: 1
-    name: foo
-    type: grafana-simple-json-datasource
-    access: proxy
-    url: http://datasource.default:5000
-    password: ""
-    user: ""
-    database: ""
-    basicauth: false
-    basicauthuser: null
-    basicauthpassword: null
-    isdefault: false
-    jsondata: {}
-    securejsondata: null
-  - id: 3
-    orgid: 1
-    name: bar
-    type: postgres
-    access: proxy
-    url: http://postgres.default:5432
-    password: ""
-    user: grafana
-    database: bar
-    basicauth: false
-    basicauthuser: null
-    basicauthpassword: null
-    isdefault: false
-    jsondata:
-      postgresVersion: 1200
-      sslmode: disable
-    securejsondata: null
-  - id: 7
-    orgid: 1
-    name: Prometheus
-    type: prometheus
-    access: proxy
-    url: http://monitoring-prometheus-mock.monitoring.svc:80
-    password: ""
-    user: ""
-    database: ""
-    basicauth: false
-    basicauthuser: null
-    basicauthpassword: null
-    isdefault: true
-    jsondata: {}
-    securejsondata: null
-`
-)
+	gp := filepath.Join("testdata", slug.Make(t.Name())+".golden")
+	if *update {
+		err = os.WriteFile(gp, []byte(content), 0644)
+		require.NoError(t, err)
+	}
+
+	expected, err := os.ReadFile(gp)
+	require.NoError(t, err)
+
+	assert.True(t, ok)
+	assert.Equal(t, string(expected), content)
+}

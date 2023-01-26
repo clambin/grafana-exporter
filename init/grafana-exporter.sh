@@ -20,13 +20,6 @@ if [ -z "$GIT_TOKEN" ]; then
 	exit 1
 fi
 
-if [ -z "$GRAFANA_API_KEY" ]; then
-  echo Missing GRAFANA_API_KEY env var
-  exit 1
-fi
-
-[ -z "$GRAFANA_URL" ] && GRAFANA_URL=http://grafana.monitoring.svc:3000
-
 git config --global user.email "$GIT_EMAIL" || exit 1
 git config --global user.name "$GIT_FULL_NAME" || exit 1
 
@@ -40,15 +33,15 @@ if [ -n "$BRANCH" ]; then
 fi
 
 if [ -n "$OUT_DATASOURCES" ]; then
-  /app/grafana-exporter --out "$OUT_DATASOURCES" --url "$GRAFANA_URL" --token "$GRAFANA_API_KEY" datasources || exit 1
+  /app/grafana-exporter datasources --out "$OUT_DATASOURCES" || exit 1
 fi
 
 if [ -n "$OUT_DASHBOARD_PROVISIONING" ]; then
-  /app/grafana-exporter --out "$OUT_DASHBOARD_PROVISIONING" --url "$GRAFANA_URL" --token "$GRAFANA_API_KEY" dashboard-provisioning || exit 1
+  /app/grafana-exporter dashboard-provisioning --out "$OUT_DASHBOARD_PROVISIONING"  || exit 1
 fi
 
 if [ -n "$OUT_DASHBOARDS" ]; then
-  /app/grafana-exporter --out "$OUT_DASHBOARDS" --url "$GRAFANA_URL" --token "$GRAFANA_API_KEY" dashboards --folders="$GRAFANA_FOLDERS" || exit 1
+  /app/grafana-exporter dashboards --out "$OUT_DASHBOARDS" || exit 1
 fi
 
 if [ -z "$SKIP_COMMIT" ]; then

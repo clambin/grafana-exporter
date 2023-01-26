@@ -7,7 +7,7 @@ import (
 	"fmt"
 	"github.com/gosimple/slug"
 	"github.com/grafana-tools/sdk"
-	log "github.com/sirupsen/logrus"
+	"golang.org/x/exp/slog"
 	"gopkg.in/yaml.v3"
 	"net/http"
 )
@@ -40,38 +40,41 @@ func NewWithHTTPClient(url, apiToken string, httpClient *http.Client) *Client {
 // Names are converted to slugs for use in clusters and/or file systems.
 //
 // E.g. if Grafana has
-//     Folder 1:  Dashboard 1
-//     Folder 2:  Dashboard 2, Dashboard 3
+//
+//	Folder 1:  Dashboard 1
+//	Folder 2:  Dashboard 2, Dashboard 3
+//
 // then this function returns
 // map
 // +-> folder-1
 // |"  +-> dashboard-1.json -> json model of dashboard 1
 // +-> folder-2
-//     +-> dashboard-2.json -> json model of dashboard 2
-//     +-> dashboard-3.json -> json model of dashboard 3
-func (client *Client) GetAllDashboards(ctx context.Context, exportedFolders []string) (result map[string]map[string]string, err error) {
-	c := sdk.NewClient(client.url, client.apiToken, client.apiClient)
-
-	// Get all dashboards
+//
+//	+-> dashboard-2.json -> json model of dashboard 2
+//	+-> dashboard-3.json -> json model of dashboard 3
+func (client *Client) GetAllDashboards(ctx context.Context, exportedFolders []string) (map[string]map[string]string, error) {
 	var foundBoards []sdk.FoundBoard
-	foundBoards, err = c.Search(ctx, sdk.SearchType(sdk.SearchTypeDashboard))
-
-	if err != nil {
-		err = fmt.Errorf("failed to get dashboard from grafana: %w", err)
-		return
+	c, err := sdk.NewClient(client.url, client.apiToken, client.apiClient)
+	if err == nil {
+		// Get all dashboards
+		foundBoards, err = c.Search(ctx, sdk.SearchType(sdk.SearchTypeDashboard))
 	}
 
-	result = make(map[string]map[string]string)
+	if err != nil {
+		return nil, fmt.Errorf("grafana search: %w", err)
+	}
+
+	result := make(map[string]map[string]string)
 	for _, link := range foundBoards {
-		log.WithFields(log.Fields{
-			"title":  link.Title,
-			"type":   link.Type,
-			"folder": link.FolderTitle,
-		}).Debug("dashboard found")
+		slog.Debug("dashboard found",
+			"title", link.Title,
+			"type", link.Type,
+			"folder", link.FolderTitle,
+		)
 
 		// Only process dashboards, not folders
 		if link.Type != "dash-db" {
-			log.WithField("type", link.Type).Debug("wrong type. ignoring")
+			slog.Debug("invalid type in dashboard. ignoring", "type", link.Type)
 			continue
 		}
 
@@ -82,7 +85,7 @@ func (client *Client) GetAllDashboards(ctx context.Context, exportedFolders []st
 
 		// Only export if the dashboard is in a specified folder
 		if !validFolder(link.FolderTitle, exportedFolders) {
-			log.WithField("folderTitle", link.FolderTitle).Debug("folder not in scope. ignoring")
+			slog.Debug("folder not in scope. ignoring", "folderTitle", link.FolderTitle, "title", link.Title)
 			continue
 		}
 
@@ -90,8 +93,8 @@ func (client *Client) GetAllDashboards(ctx context.Context, exportedFolders []st
 		var rawBoard []byte
 		rawBoard, _, err = c.GetRawDashboardByUID(ctx, link.UID)
 		if err != nil {
-			log.Warnf("failed to get dashboard %s: %s", link.Title, err.Error())
-			continue
+			slog.Error("failed to get dashboard", err, link.Title)
+			break
 		}
 
 		// Reformat the JSON stream to store it properly in YAML
@@ -105,20 +108,21 @@ func (client *Client) GetAllDashboards(ctx context.Context, exportedFolders []st
 
 		// Store it in the map
 		result[link.FolderTitle][slug.Make(link.Title)+".json"] = buffer.String()
-		log.Debug("Stored")
 	}
-	return
+	return result, err
 }
 
 // GetDataSources retrieves all dataSources in Grafana.
 // For simplicity, we'll store these in one config file 'datasources.yml'
 // So the returning map will only have one element.
-func (client *Client) GetDataSources(ctx context.Context) (result map[string]string, err error) {
-	c := sdk.NewClient(client.url, client.apiToken, client.apiClient)
-
+func (client *Client) GetDataSources(ctx context.Context) (map[string]string, error) {
 	var dataSources []sdk.Datasource
-	if dataSources, err = c.GetAllDatasources(ctx); err != nil {
-		return
+	c, err := sdk.NewClient(client.url, client.apiToken, client.apiClient)
+	if err == nil {
+		dataSources, err = c.GetAllDatasources(ctx)
+	}
+	if err != nil {
+		return nil, fmt.Errorf("grafana datasources: %w", err)
 	}
 
 	wrapper := struct {
@@ -132,15 +136,15 @@ func (client *Client) GetDataSources(ctx context.Context) (result map[string]str
 	var buffer bytes.Buffer
 	encoder := yaml.NewEncoder(&buffer)
 	encoder.SetIndent(2)
-
 	err = encoder.Encode(&wrapper)
 	_ = encoder.Close()
 
+	var result map[string]string
 	if err == nil {
 		result = map[string]string{"datasources.yml": buffer.String()}
 	}
 
-	return
+	return result, err
 }
 
 func validFolder(folder string, folders []string) bool {
