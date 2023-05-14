@@ -136,7 +136,9 @@ func initConfig() {
 		slog.Error("failed to read config file", err)
 	}
 
+	var opts slog.HandlerOptions
 	if viper.GetBool("debug") {
-		slog.SetDefault(slog.New(slog.HandlerOptions{Level: slog.LevelDebug}.NewTextHandler(os.Stderr)))
+		opts.Level = slog.LevelDebug
 	}
+	slog.SetDefault(slog.New(slog.NewTextHandler(os.Stderr, &opts)))
 }
