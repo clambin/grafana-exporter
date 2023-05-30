@@ -1,6 +1,7 @@
 package main
 
 import (
+	"context"
 	"github.com/clambin/grafana-exporter/export"
 	"github.com/clambin/grafana-exporter/grafana"
 	"github.com/clambin/grafana-exporter/version"
@@ -21,17 +22,17 @@ var (
 	dashboardsCmd = &cobra.Command{
 		Use:   "dashboards",
 		Short: "export Grafana dashboards",
-		Run:   ExportDashboards,
+		RunE:  ExportDashboards,
 	}
 	dashboardsProvisioningCmd = &cobra.Command{
 		Use:   "dashboards-provisioning",
 		Short: "export Grafana dashboard provisioning",
-		Run:   ExportDashboardProvisioning,
+		RunE:  ExportDashboardProvisioning,
 	}
 	datasourcesCmd = &cobra.Command{
 		Use:   "datasources",
 		Short: "export Grafana data sources provisioning",
-		Run:   ExportDataSources,
+		RunE:  ExportDataSources,
 	}
 )
 
@@ -41,7 +42,7 @@ func main() {
 	}
 }
 
-func ExportDashboards(cmd *cobra.Command, _ []string) {
+func ExportDashboards(cmd *cobra.Command, _ []string) error {
 	slog.Info("exporting Grafana dashboards", "version", cmd.Root().Version)
 
 	err := export.Dashboards(
@@ -57,9 +58,10 @@ func ExportDashboards(cmd *cobra.Command, _ []string) {
 	} else {
 		slog.Info("exported Grafana dashboards")
 	}
+	return err
 }
 
-func ExportDashboardProvisioning(cmd *cobra.Command, _ []string) {
+func ExportDashboardProvisioning(cmd *cobra.Command, _ []string) error {
 	slog.Info("exporting Grafana dashboard provisioning information", "version", cmd.Root().Version)
 
 	err := export.DashboardProvisioning(
@@ -72,9 +74,10 @@ func ExportDashboardProvisioning(cmd *cobra.Command, _ []string) {
 	} else {
 		slog.Info("exported Grafana dashboard provisioning")
 	}
+	return err
 }
 
-func ExportDataSources(cmd *cobra.Command, _ []string) {
+func ExportDataSources(cmd *cobra.Command, _ []string) error {
 	slog.Info("exporting Grafana data sources provisioning information", "version", cmd.Root().Version)
 
 	err := export.DataSources(
@@ -88,6 +91,7 @@ func ExportDataSources(cmd *cobra.Command, _ []string) {
 	} else {
 		slog.Info("exported Grafana data sources provisioning")
 	}
+	return err
 }
 
 func init() {
@@ -114,6 +118,9 @@ func init() {
 	_ = viper.BindPFlag("token", rootCmd.PersistentFlags().Lookup("token"))
 	rootCmd.PersistentFlags().StringP("out", "o", "", "Output directory")
 	_ = viper.BindPFlag("out", rootCmd.PersistentFlags().Lookup("out"))
+
+	ctx := context.WithValue(context.Background(), "logger", slog.Default())
+	rootCmd.SetContext(ctx)
 
 	dashboardsCmd.PersistentFlags().StringP("folders", "f", "k3s", "comma-separared list of folders to export")
 	_ = viper.BindPFlag("folders", rootCmd.PersistentFlags().Lookup("folders"))
