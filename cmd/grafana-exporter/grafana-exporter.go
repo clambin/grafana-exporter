@@ -53,7 +53,7 @@ func ExportDashboards(cmd *cobra.Command, _ []string) {
 	)
 
 	if err != nil {
-		slog.Error("failed to export Grafana dashboards", err)
+		slog.Error("failed to export Grafana dashboards", "err", err)
 	} else {
 		slog.Info("exported Grafana dashboards")
 	}
@@ -68,7 +68,7 @@ func ExportDashboardProvisioning(cmd *cobra.Command, _ []string) {
 		viper.GetString("namespace"),
 	)
 	if err != nil {
-		slog.Error("failed to export Grafana dashboard provisioning", err)
+		slog.Error("failed to export Grafana dashboard provisioning", "err", err)
 	} else {
 		slog.Info("exported Grafana dashboard provisioning")
 	}
@@ -84,7 +84,7 @@ func ExportDataSources(cmd *cobra.Command, _ []string) {
 		viper.GetString("namespace"),
 	)
 	if err != nil {
-		slog.Error("failed to export Grafana data sources provisioning", err)
+		slog.Error("failed to export Grafana data sources provisioning", "err", err)
 	} else {
 		slog.Info("exported Grafana data sources provisioning")
 	}
@@ -133,7 +133,7 @@ func initConfig() {
 	viper.AutomaticEnv()
 
 	if err := viper.ReadInConfig(); err != nil {
-		slog.Error("failed to read config file", err)
+		slog.Error("failed to read config file", "err", err)
 	}
 
 	var opts slog.HandlerOptions

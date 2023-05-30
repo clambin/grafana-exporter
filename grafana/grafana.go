@@ -93,7 +93,7 @@ func (client *Client) GetAllDashboards(ctx context.Context, exportedFolders []st
 		var rawBoard []byte
 		rawBoard, _, err = c.GetRawDashboardByUID(ctx, link.UID)
 		if err != nil {
-			slog.Error("failed to get dashboard", err, link.Title)
+			slog.Error("failed to get dashboard", "err", err, "name", link.Title)
 			break
 		}
 

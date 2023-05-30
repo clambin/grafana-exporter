@@ -34,7 +34,7 @@ func Dashboards(grafanaClient *grafana.Client, writer writer.Writer, direct bool
 				err = writer.WriteFile(".", fileName, fileContents)
 			}
 			if err != nil {
-				slog.Error("failed to write dashboard file(s)", err, "folder", folder)
+				slog.Error("failed to write dashboard file(s)", "err", err, "folder", folder)
 				break
 			}
 			slog.Info("Wrote dashboard file", "folder", folder)
