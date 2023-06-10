@@ -3,8 +3,8 @@ name: Test
 on:
   push:
     branches-ignore:
-      - refactor
       - master
+      - sdk
   pull_request_target:
 
 jobs:

@@ -1,14 +1,9 @@
 package fetcher
 
 import (
-	"context"
-	"github.com/grafana-tools/sdk"
+	gapi "github.com/grafana/grafana-api-golang-client"
 )
 
 type DataSourcesClient interface {
-	GetAllDatasources(ctx context.Context) ([]sdk.Datasource, error)
-}
-
-func FetchDataSources(ctx context.Context, c DataSourcesClient) ([]sdk.Datasource, error) {
-	return c.GetAllDatasources(ctx)
+	DataSources() ([]*gapi.DataSource, error)
 }

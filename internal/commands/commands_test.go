@@ -1,12 +1,11 @@
 package commands_test
 
 import (
-	"context"
 	"flag"
 	"fmt"
 	"github.com/clambin/grafana-exporter/internal/fetcher"
 	"github.com/clambin/grafana-exporter/internal/writer"
-	"github.com/grafana-tools/sdk"
+	gapi "github.com/grafana/grafana-api-golang-client"
 )
 
 var update = flag.Bool("update", false, "generate golden images")
@@ -23,40 +22,20 @@ var _ fetcher.DashboardClient = &fakeDashboardClient{}
 
 type fakeDashboardClient struct{}
 
-func (f fakeDashboardClient) Search(_ context.Context, _ ...sdk.SearchParam) ([]sdk.FoundBoard, error) {
-	return []sdk.FoundBoard{
+func (f fakeDashboardClient) Dashboards() ([]gapi.FolderDashboardSearchResponse, error) {
+	return []gapi.FolderDashboardSearchResponse{
 		{Title: "foo", Type: "dash-db", FolderTitle: "bar", UID: "1"},
 		{Title: "snafu", Type: "dash-db", FolderTitle: "foobar", UID: "2"},
 	}, nil
 }
 
-func (f fakeDashboardClient) GetRawDashboardByUID(_ context.Context, uid string) ([]byte, sdk.BoardProperties, error) {
-	type dashboardAttribs struct {
-		content []byte
-		props   sdk.BoardProperties
+func (f fakeDashboardClient) DashboardByUID(uid string) (*gapi.Dashboard, error) {
+	var dashboards = map[string]*gapi.Dashboard{
+		"1": {Model: map[string]any{"folder": "bar", "title": "foo"}},
+		"2": {Model: map[string]any{"folder": "foobar", "title": "snafu"}},
 	}
-	var dashboards = map[string]dashboardAttribs{
-		"1": {
-			content: []byte(`{ "folder": "bar", "title": "foo" }`),
-			props: sdk.BoardProperties{
-				Type:        "dash-db",
-				Slug:        "foo",
-				FolderTitle: "bar",
-			},
-		},
-		"2": {
-			content: []byte(`{ "folder": "foobar", "title": "snafu" }`),
-			props: sdk.BoardProperties{
-				Type:        "dash-db",
-				Slug:        "foo",
-				FolderTitle: "bar",
-			},
-		},
+	if dashboard, ok := dashboards[uid]; ok {
+		return dashboard, nil
 	}
-	var err error
-	attribs, ok := dashboards[uid]
-	if !ok {
-		err = fmt.Errorf("invalid uid: %s", uid)
-	}
-	return attribs.content, attribs.props, err
+	return nil, fmt.Errorf("invalid uid: %s", uid)
 }

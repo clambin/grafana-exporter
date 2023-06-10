@@ -1,10 +1,9 @@
 package commands_test
 
 import (
-	"context"
 	"github.com/clambin/grafana-exporter/internal/commands"
 	"github.com/clambin/grafana-exporter/internal/fetcher"
-	"github.com/grafana-tools/sdk"
+	gapi "github.com/grafana/grafana-api-golang-client"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 	"os"
@@ -37,7 +36,7 @@ func TestExportDataSources(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			f := fakeDataSourcesClient{}
 			w := fakeWriter{}
-			err := commands.ExportDataSources(context.Background(), &f, &w, tt.cfg)
+			err := commands.ExportDataSources(&f, &w, tt.cfg)
 			require.NoError(t, err)
 			require.Contains(t, w, ".")
 			require.Contains(t, w["."], "datasources.yml")
@@ -58,8 +57,8 @@ var _ fetcher.DataSourcesClient = &fakeDataSourcesClient{}
 
 type fakeDataSourcesClient struct{}
 
-func (f fakeDataSourcesClient) GetAllDatasources(_ context.Context) ([]sdk.Datasource, error) {
-	return []sdk.Datasource{
+func (f fakeDataSourcesClient) DataSources() ([]*gapi.DataSource, error) {
+	return []*gapi.DataSource{
 		{
 			Name: "prometheus",
 			Type: "prometheus",
@@ -69,12 +68,9 @@ func (f fakeDataSourcesClient) GetAllDatasources(_ context.Context) ([]sdk.Datas
 			Name: "postgres",
 			Type: "postgres",
 			URL:  "http://postgres.default:5432",
-			JSONData: struct {
-				PostgresVersion int    `yaml:"postgresVersion"`
-				SSSLMode        string `yaml:"sslmode"`
-			}{
-				PostgresVersion: 1200,
-				SSSLMode:        "disable",
+			JSONData: map[string]any{
+				"postgresVersion": 1200,
+				"sslmode":         "disable",
 			},
 		},
 	}, nil

@@ -5,7 +5,7 @@ import (
 	"github.com/clambin/grafana-exporter/internal/commands"
 	"github.com/clambin/grafana-exporter/internal/writer"
 	"github.com/clambin/grafana-exporter/version"
-	"github.com/grafana-tools/sdk"
+	gapi "github.com/grafana/grafana-api-golang-client"
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
 	"golang.org/x/exp/slog"
@@ -43,14 +43,17 @@ func main() {
 	}
 }
 
-func ExportDashboards(cmd *cobra.Command, _ []string) error {
+func ExportDashboards(_ *cobra.Command, _ []string) error {
 	w := writer.NewDiskWriter(viper.GetString("out"))
-	c, err := sdk.NewClient(viper.GetString("url"), viper.GetString("token"), http.DefaultClient)
+	c, err := gapi.New(viper.GetString("url"), gapi.Config{
+		APIKey: viper.GetString("token"),
+		Client: http.DefaultClient,
+	})
 	if err != nil {
 		return fmt.Errorf("grafana connect: %w", err)
 	}
 
-	return commands.ExportDashboards(cmd.Context(), c, w, commands.Config{
+	return commands.ExportDashboards(c, w, commands.Config{
 		AsConfigMap: !viper.GetBool("direct"),
 		Namespace:   viper.GetString("namespace"),
 		Folders:     strings.Split(viper.GetString("folders"), ","),
@@ -65,13 +68,16 @@ func ExportDashboardProvisioning(_ *cobra.Command, _ []string) error {
 	})
 }
 
-func ExportDataSources(cmd *cobra.Command, _ []string) error {
+func ExportDataSources(_ *cobra.Command, _ []string) error {
 	w := writer.NewDiskWriter(viper.GetString("out"))
-	c, err := sdk.NewClient(viper.GetString("url"), viper.GetString("token"), http.DefaultClient)
+	c, err := gapi.New(viper.GetString("url"), gapi.Config{
+		APIKey: viper.GetString("token"),
+		Client: http.DefaultClient,
+	})
 	if err != nil {
 		return fmt.Errorf("grafana connect: %w", err)
 	}
-	return commands.ExportDataSources(cmd.Context(), c, w, commands.Config{
+	return commands.ExportDataSources(c, w, commands.Config{
 		AsConfigMap: !viper.GetBool("direct"),
 		Namespace:   viper.GetString("namespace"),
 	})

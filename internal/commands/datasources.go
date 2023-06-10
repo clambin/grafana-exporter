@@ -2,17 +2,16 @@ package commands
 
 import (
 	"bytes"
-	"context"
 	"fmt"
 	"github.com/clambin/grafana-exporter/internal/configmap"
 	"github.com/clambin/grafana-exporter/internal/fetcher"
 	"github.com/clambin/grafana-exporter/internal/writer"
-	"github.com/grafana-tools/sdk"
+	gapi "github.com/grafana/grafana-api-golang-client"
 	"gopkg.in/yaml.v3"
 )
 
-func ExportDataSources(ctx context.Context, f fetcher.DataSourcesClient, w writer.Writer, cfg Config) error {
-	sources, err := f.GetAllDatasources(ctx)
+func ExportDataSources(f fetcher.DataSourcesClient, w writer.Writer, cfg Config) error {
+	sources, err := f.DataSources()
 	if err != nil {
 		return fmt.Errorf("grafana get datasources: %w", err)
 	}
@@ -30,11 +29,11 @@ func ExportDataSources(ctx context.Context, f fetcher.DataSourcesClient, w write
 }
 
 type dataSources struct {
-	APIVersion  int              `yaml:"apiVersion"`
-	DataSources []sdk.Datasource `yaml:"datasources"`
+	APIVersion  int                `yaml:"apiVersion"`
+	DataSources []*gapi.DataSource `yaml:"datasources"`
 }
 
-func exportDataSourcesAsFiles(sources []sdk.Datasource) (writer.Directories, error) {
+func exportDataSourcesAsFiles(sources []*gapi.DataSource) (writer.Directories, error) {
 	wrapped := dataSources{
 		APIVersion:  1,
 		DataSources: sources,

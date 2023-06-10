@@ -1,7 +1,6 @@
 package commands_test
 
 import (
-	"context"
 	"github.com/clambin/grafana-exporter/internal/commands"
 	"github.com/gosimple/slug"
 	"github.com/stretchr/testify/assert"
@@ -56,7 +55,7 @@ func TestExportDashboards(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			f := fakeDashboardClient{}
 			w := make(fakeWriter)
-			err := commands.ExportDashboards(context.Background(), &f, &w, tt.cfg)
+			err := commands.ExportDashboards(&f, &w, tt.cfg)
 			require.NoError(t, err)
 			require.Contains(t, w, tt.directory)
 			for _, filename := range tt.filenames {

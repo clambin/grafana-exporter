@@ -1,18 +1,17 @@
 package fetcher_test
 
 import (
-	"context"
-	"errors"
+	"fmt"
 	"github.com/clambin/go-common/set"
 	"github.com/clambin/grafana-exporter/internal/fetcher"
-	"github.com/grafana-tools/sdk"
+	gapi "github.com/grafana/grafana-api-golang-client"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 	"testing"
 )
 
 func TestFetchDashboards(t *testing.T) {
-	result, err := fetcher.FetchDashboards(context.Background(), &fakeDashboardFetcher{}, set.Create("foo"))
+	result, err := fetcher.FetchDashboards(&fakeDashboardFetcher{}, set.Create("foo"))
 	require.NoError(t, err)
 	assert.Len(t, result, 1)
 
@@ -28,8 +27,8 @@ var _ fetcher.DashboardClient = &fakeDashboardFetcher{}
 type fakeDashboardFetcher struct {
 }
 
-func (f fakeDashboardFetcher) Search(_ context.Context, _ ...sdk.SearchParam) ([]sdk.FoundBoard, error) {
-	return []sdk.FoundBoard{
+func (f fakeDashboardFetcher) Dashboards() ([]gapi.FolderDashboardSearchResponse, error) {
+	return []gapi.FolderDashboardSearchResponse{
 		{UID: "1", Title: "board 1", Type: "dash-db", FolderTitle: "foo"},
 		{UID: "2", Title: "board 2", Type: "dash-db", FolderTitle: "bar"},
 		{UID: "3", Title: "foo", Type: "folder", FolderTitle: ""},
@@ -37,13 +36,15 @@ func (f fakeDashboardFetcher) Search(_ context.Context, _ ...sdk.SearchParam) ([
 	}, nil
 }
 
-func (f fakeDashboardFetcher) GetRawDashboardByUID(_ context.Context, uid string) ([]byte, sdk.BoardProperties, error) {
-	var props sdk.BoardProperties
-	if uid != "1" {
-		return nil, props, errors.New("not found")
+func (f fakeDashboardFetcher) DashboardByUID(uid string) (*gapi.Dashboard, error) {
+	dashboards := map[string]*gapi.Dashboard{
+		"1": {Model: map[string]any{"foo": "bar"}},
+		"2": {Model: map[string]any{"bar": "foo"}},
 	}
-	return []byte(`{
-"foo": "bar",
-"bar": "foo"
-`), props, nil
+
+	dashboard, ok := dashboards[uid]
+	if !ok {
+		return nil, fmt.Errorf("invalid dashboard uid: %s", uid)
+	}
+	return dashboard, nil
 }

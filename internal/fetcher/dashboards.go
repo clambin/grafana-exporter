@@ -1,25 +1,24 @@
 package fetcher
 
 import (
-	"context"
 	"fmt"
 	"github.com/clambin/go-common/set"
-	"github.com/grafana-tools/sdk"
+	gapi "github.com/grafana/grafana-api-golang-client"
 	"golang.org/x/exp/slog"
 )
 
 type DashboardClient interface {
-	Search(ctx context.Context, params ...sdk.SearchParam) ([]sdk.FoundBoard, error)
-	GetRawDashboardByUID(ctx context.Context, uid string) ([]byte, sdk.BoardProperties, error)
+	Dashboards() ([]gapi.FolderDashboardSearchResponse, error)
+	DashboardByUID(uid string) (*gapi.Dashboard, error)
 }
 
 type Board struct {
-	Title   string
-	Content []byte
+	Title string
+	Model map[string]any
 }
 
-func FetchDashboards(ctx context.Context, c DashboardClient, exportedFolders set.Set[string]) (map[string][]Board, error) {
-	foundBoards, err := c.Search(ctx, sdk.SearchType(sdk.SearchTypeDashboard))
+func FetchDashboards(c DashboardClient, exportedFolders set.Set[string]) (map[string][]Board, error) {
+	foundBoards, err := c.Dashboards()
 	if err != nil {
 		return nil, fmt.Errorf("grafana search: %w", err)
 	}
@@ -40,13 +39,13 @@ func FetchDashboards(ctx context.Context, c DashboardClient, exportedFolders set
 			continue
 		}
 
-		// Get the dashboard JSON model
-		rawBoard, _, err := c.GetRawDashboardByUID(ctx, board.UID)
+		// Get the dashboard model
+		rawBoard, err := c.DashboardByUID(board.UID)
 		if err != nil {
 			return nil, fmt.Errorf("grafana get board: %w", err)
 		}
 
-		boards := append(result[board.FolderTitle], Board{Title: board.Title, Content: rawBoard})
+		boards := append(result[board.FolderTitle], Board{Title: board.Title, Model: rawBoard.Model})
 		result[board.FolderTitle] = boards
 	}
 
