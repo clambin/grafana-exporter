@@ -1,14 +1,15 @@
 package main
 
 import (
-	"context"
-	"github.com/clambin/grafana-exporter/export"
-	"github.com/clambin/grafana-exporter/grafana"
+	"fmt"
+	"github.com/clambin/grafana-exporter/internal/commands"
+	"github.com/clambin/grafana-exporter/internal/writer"
 	"github.com/clambin/grafana-exporter/version"
-	"github.com/clambin/grafana-exporter/writer"
+	"github.com/grafana-tools/sdk"
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
 	"golang.org/x/exp/slog"
+	"net/http"
 	"os"
 	"strings"
 )
@@ -43,55 +44,37 @@ func main() {
 }
 
 func ExportDashboards(cmd *cobra.Command, _ []string) error {
-	slog.Info("exporting Grafana dashboards", "version", cmd.Root().Version)
-
-	err := export.Dashboards(
-		grafana.New(viper.GetString("url"), viper.GetString("token")),
-		writer.NewDiskWriter(viper.GetString("out")),
-		viper.GetBool("direct"),
-		viper.GetString("namespace"),
-		strings.Split(viper.GetString("folders"), ","),
-	)
-
+	w := writer.NewDiskWriter(viper.GetString("out"))
+	c, err := sdk.NewClient(viper.GetString("url"), viper.GetString("token"), http.DefaultClient)
 	if err != nil {
-		slog.Error("failed to export Grafana dashboards", "err", err)
-	} else {
-		slog.Info("exported Grafana dashboards")
+		return fmt.Errorf("grafana connect: %w", err)
 	}
-	return err
+
+	return commands.ExportDashboards(cmd.Context(), c, w, commands.Config{
+		AsConfigMap: !viper.GetBool("direct"),
+		Namespace:   viper.GetString("namespace"),
+		Folders:     strings.Split(viper.GetString("folders"), ","),
+	})
 }
 
-func ExportDashboardProvisioning(cmd *cobra.Command, _ []string) error {
-	slog.Info("exporting Grafana dashboard provisioning information", "version", cmd.Root().Version)
-
-	err := export.DashboardProvisioning(
-		writer.NewDiskWriter(viper.GetString("out")),
-		viper.GetBool("direct"),
-		viper.GetString("namespace"),
-	)
-	if err != nil {
-		slog.Error("failed to export Grafana dashboard provisioning", "err", err)
-	} else {
-		slog.Info("exported Grafana dashboard provisioning")
-	}
-	return err
+func ExportDashboardProvisioning(_ *cobra.Command, _ []string) error {
+	w := writer.NewDiskWriter(viper.GetString("out"))
+	return commands.ExportDashboardProvisioning(w, commands.Config{
+		AsConfigMap: !viper.GetBool("direct"),
+		Namespace:   viper.GetString("namespace"),
+	})
 }
 
 func ExportDataSources(cmd *cobra.Command, _ []string) error {
-	slog.Info("exporting Grafana data sources provisioning information", "version", cmd.Root().Version)
-
-	err := export.DataSources(
-		grafana.New(viper.GetString("url"), viper.GetString("token")),
-		writer.NewDiskWriter(viper.GetString("out")),
-		viper.GetBool("direct"),
-		viper.GetString("namespace"),
-	)
+	w := writer.NewDiskWriter(viper.GetString("out"))
+	c, err := sdk.NewClient(viper.GetString("url"), viper.GetString("token"), http.DefaultClient)
 	if err != nil {
-		slog.Error("failed to export Grafana data sources provisioning", "err", err)
-	} else {
-		slog.Info("exported Grafana data sources provisioning")
+		return fmt.Errorf("grafana connect: %w", err)
 	}
-	return err
+	return commands.ExportDataSources(cmd.Context(), c, w, commands.Config{
+		AsConfigMap: !viper.GetBool("direct"),
+		Namespace:   viper.GetString("namespace"),
+	})
 }
 
 func init() {
@@ -119,8 +102,8 @@ func init() {
 	rootCmd.PersistentFlags().StringP("out", "o", "", "Output directory")
 	_ = viper.BindPFlag("out", rootCmd.PersistentFlags().Lookup("out"))
 
-	ctx := context.WithValue(context.Background(), "logger", slog.Default())
-	rootCmd.SetContext(ctx)
+	// ctx := context.WithValue(context.Background(), "logger", slog.Default())
+	//rootCmd.SetContext(ctx)
 
 	dashboardsCmd.PersistentFlags().StringP("folders", "f", "k3s", "comma-separared list of folders to export")
 	_ = viper.BindPFlag("folders", rootCmd.PersistentFlags().Lookup("folders"))

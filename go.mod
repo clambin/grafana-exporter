@@ -3,6 +3,7 @@ module github.com/clambin/grafana-exporter
 go 1.18
 
 require (
+	github.com/clambin/go-common/set v0.2.0
 	github.com/gosimple/slug v1.13.1
 	github.com/grafana-tools/sdk v0.0.0-20220919052116-6562121319fc
 	github.com/spf13/cobra v1.7.0

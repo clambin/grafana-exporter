@@ -3,7 +3,8 @@ name: Test
 on:
   push:
     branches-ignore:
-      - viper
+      - refactor
+      - master
   pull_request_target:
 
 jobs:
