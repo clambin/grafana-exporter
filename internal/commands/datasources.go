@@ -10,22 +10,26 @@ import (
 	"gopkg.in/yaml.v3"
 )
 
-func ExportDataSources(f fetcher.DataSourcesClient, w writer.Writer, cfg Config) error {
+func ExportDataSources(f fetcher.DataSourcesClient, w *writer.Writer, cfg Config) error {
 	sources, err := f.DataSources()
 	if err != nil {
 		return fmt.Errorf("grafana get datasources: %w", err)
 	}
-	content, err := exportDataSourcesAsFiles(sources)
+
+	content, err := exportDataSourcesAsFile(sources)
 	if err == nil && cfg.AsConfigMap {
-		var asConfigMap []byte
-		if _, asConfigMap, err = configmap.Serialize(content["."], "datasources", cfg.Namespace, ""); err == nil {
-			content["."]["datasources.yml"] = asConfigMap
-		}
+		_, content, err = configmap.Serialize(map[string][]byte{"datasources.yml": content}, "datasources", cfg.Namespace, "")
 	}
-	if err == nil {
-		err = w.Write(content)
+	if err != nil {
+		return fmt.Errorf("encode: %w", err)
 	}
-	return err
+	if err = w.Initialize(); err != nil {
+		return fmt.Errorf("write init: %w", err)
+	}
+	if err = w.AddFile("datasources.yml", content); err != nil {
+		return fmt.Errorf("write: %w", err)
+	}
+	return w.Store()
 }
 
 type dataSources struct {
@@ -33,15 +37,16 @@ type dataSources struct {
 	DataSources []*gapi.DataSource `yaml:"datasources"`
 }
 
-func exportDataSourcesAsFiles(sources []*gapi.DataSource) (writer.Directories, error) {
+func exportDataSourcesAsFile(sources []*gapi.DataSource) ([]byte, error) {
 	wrapped := dataSources{
 		APIVersion:  1,
 		DataSources: sources,
 	}
 	var buf bytes.Buffer
-	err := yaml.NewEncoder(&buf).Encode(wrapped)
-	if err != nil {
-		return nil, err
+	enc := yaml.NewEncoder(&buf)
+	enc.SetIndent(2)
+	if err := enc.Encode(wrapped); err != nil {
+		return nil, fmt.Errorf("encode: %w", err)
 	}
-	return writer.Directories{".": writer.Files{"datasources.yml": buf.Bytes()}}, nil
+	return buf.Bytes(), nil
 }

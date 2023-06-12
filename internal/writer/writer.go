@@ -1,40 +1,53 @@
 package writer
 
 import (
+	"bytes"
 	"errors"
 	"fmt"
 	"os"
 	"path"
 )
 
-type Files map[string][]byte
-type Directories map[string]Files
-
-type Writer interface {
-	Write(Directories) error
+// StorageHandler interface for different storage backends
+//
+//go:generate mockery --name StorageHandler
+type StorageHandler interface {
+	Initialize() error
+	GetCurrent(string) ([]byte, error)
+	Mkdir(string) error
+	Add(string, []byte) error
+	IsClean() (bool, error)
+	Store() error
 }
 
-var _ Writer = DiskWriter{}
-
-type DiskWriter struct {
-	baseDirectory string
+type Writer struct {
+	StorageHandler
+	BaseDirectory string
 }
 
-func NewDiskWriter(baseDirectory string) DiskWriter {
-	return DiskWriter{baseDirectory: baseDirectory}
-}
+func (w *Writer) AddFile(filename string, content []byte) error {
+	fullFilename := path.Join(w.BaseDirectory, filename)
+	current, err := w.StorageHandler.GetCurrent(fullFilename)
+	if err != nil && !errors.Is(err, os.ErrNotExist) {
+		return fmt.Errorf("get current: %w", err)
+	} else if bytes.Equal(current, content) {
+		return nil
+	}
 
-func (dw DiskWriter) Write(directories Directories) error {
-	for directory, files := range directories {
-		if err := os.Mkdir(path.Join(dw.baseDirectory, directory), 0755); err != nil && !errors.Is(err, os.ErrExist) {
-			return fmt.Errorf("create directory %s: %w", directory, err)
-		}
+	dirname := path.Dir(fullFilename)
+	if err := os.MkdirAll(dirname, 0755); err != nil && !errors.Is(err, os.ErrExist) {
+		return fmt.Errorf("mkdir: %w", err)
+	}
 
-		for name, content := range files {
-			if err := os.WriteFile(path.Join(dw.baseDirectory, directory, name), content, 0644); err != nil {
-				return fmt.Errorf("write %s: %w", path.Join(directory, name), err)
-			}
-		}
+	if err := w.StorageHandler.Add(fullFilename, content); err != nil {
+		return fmt.Errorf("add: %w", err)
 	}
 	return nil
+}
+
+func (w *Writer) Store() error {
+	if isClean, err := w.IsClean(); err != nil || isClean {
+		return err
+	}
+	return w.StorageHandler.Store()
 }
