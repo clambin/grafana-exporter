@@ -14,5 +14,5 @@ COPY bld/grafana-exporter-$TARGETOS-$TARGETARCH /app/grafana-exporter
 # COPY init/grafana-exporter.sh .
 
 USER abc
-ENTRYPOINT ["/bin/sh", "/app/grafana-exporter"]
+ENTRYPOINT ["/app/grafana-exporter"]
 CMD []
