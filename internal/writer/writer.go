@@ -35,11 +35,11 @@ func (w *Writer) AddFile(filename string, content []byte) error {
 	}
 
 	dirname := path.Dir(fullFilename)
-	if err := os.MkdirAll(dirname, 0755); err != nil && !errors.Is(err, os.ErrExist) {
-		return fmt.Errorf("mkdir: %w", err)
+	if err = w.StorageHandler.Mkdir(dirname); err != nil && !errors.Is(err, os.ErrExist) {
+		return err
 	}
 
-	if err := w.StorageHandler.Add(fullFilename, content); err != nil {
+	if err = w.StorageHandler.Add(fullFilename, content); err != nil {
 		return fmt.Errorf("add: %w", err)
 	}
 	return nil

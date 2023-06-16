@@ -28,6 +28,7 @@ func TestMockedWriter(t *testing.T) {
 			mockParameters: []mockParameters{
 				{methodName: "Initialize", returnValues: []any{nil}},
 				{methodName: "GetCurrent", arguments: []any{"/tmp/foo/bar.txt"}, returnValues: []any{[]byte("old"), nil}},
+				{methodName: "Mkdir", arguments: []any{"/tmp/foo"}, returnValues: []any{nil}},
 				{methodName: "Add", arguments: []any{"/tmp/foo/bar.txt", []byte("hello")}, returnValues: []any{nil}},
 				{methodName: "IsClean", returnValues: []any{false, nil}},
 				{methodName: "Store", returnValues: []any{nil}},
@@ -50,6 +51,7 @@ func TestMockedWriter(t *testing.T) {
 			mockParameters: []mockParameters{
 				{methodName: "Initialize", returnValues: []any{nil}},
 				{methodName: "GetCurrent", arguments: []any{"/tmp/foo/bar.txt"}, returnValues: []any{nil, os.ErrNotExist}},
+				{methodName: "Mkdir", arguments: []any{"/tmp/foo"}, returnValues: []any{nil}},
 				{methodName: "Add", arguments: []any{"/tmp/foo/bar.txt", []byte("hello")}, returnValues: []any{nil}},
 				{methodName: "IsClean", returnValues: []any{false, nil}},
 				{methodName: "Store", returnValues: []any{nil}},
