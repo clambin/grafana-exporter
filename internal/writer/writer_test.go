@@ -59,6 +59,15 @@ func TestMockedWriter(t *testing.T) {
 			wantWriteErr: assert.NoError,
 			wantFlushErr: assert.NoError,
 		},
+		{
+			name: "error",
+			mockParameters: []mockParameters{
+				{methodName: "Initialize", returnValues: []any{nil}},
+				{methodName: "GetCurrent", arguments: []any{"/tmp/foo/bar.txt"}, returnValues: []any{nil, os.ErrNotExist}},
+				{methodName: "Mkdir", arguments: []any{"/tmp/foo"}, returnValues: []any{os.ErrPermission}},
+			},
+			wantWriteErr: assert.Error,
+		},
 	}
 
 	for _, tt := range testcases {
@@ -71,8 +80,11 @@ func TestMockedWriter(t *testing.T) {
 			}
 
 			require.NoError(t, r.Initialize())
-			tt.wantWriteErr(t, w.AddFile("foo/bar.txt", []byte("hello")))
-			tt.wantFlushErr(t, w.Store())
+			err := w.AddFile("foo/bar.txt", []byte("hello"))
+			tt.wantWriteErr(t, err)
+			if err == nil {
+				tt.wantFlushErr(t, w.Store())
+			}
 		})
 	}
 }

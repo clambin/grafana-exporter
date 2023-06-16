@@ -2,6 +2,7 @@ package fs
 
 import (
 	"github.com/clambin/grafana-exporter/internal/writer"
+	"golang.org/x/exp/slog"
 	"os"
 )
 
@@ -26,6 +27,7 @@ func (c *Client) GetCurrent(s string) ([]byte, error) {
 }
 
 func (c *Client) Mkdir(s string) error {
+	slog.Debug("creating local directory")
 	return os.MkdirAll(s, 0755)
 }
 

@@ -7,6 +7,7 @@ import (
 	"github.com/clambin/grafana-exporter/internal/writer/fs"
 	"github.com/clambin/grafana-exporter/internal/writer/git"
 	"github.com/spf13/viper"
+	"golang.org/x/exp/slog"
 )
 
 func makeWriter() (*writer.Writer, error) {
@@ -14,6 +15,7 @@ func makeWriter() (*writer.Writer, error) {
 	mode := viper.GetString("mode")
 	switch mode {
 	case "local":
+		slog.Info("using local file system")
 		storage = &fs.Client{}
 	case "git":
 		url := viper.GetString("git.url")
@@ -29,6 +31,7 @@ func makeWriter() (*writer.Writer, error) {
 		if password == "" {
 			return nil, errors.New("missing git password/token")
 		}
+		slog.Info("using git repo", "url", url)
 		storage = git.New(url, branch, username, password)
 	default:
 		return nil, fmt.Errorf("invalid output mode: '%s'", mode)
