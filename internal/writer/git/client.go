@@ -101,7 +101,11 @@ func (c *Client) Store() error {
 	if _, err = tree.Commit("Exported Grafana dashboards", &git.CommitOptions{
 		All:               false,
 		AllowEmptyCommits: false,
-		Author:            nil,
+		Author: &object.Signature{
+			Name:  "grafana-exporter",
+			Email: "",
+			When:  time.Now(),
+		},
 		Committer: &object.Signature{
 			Name:  "grafana-exporter",
 			Email: "",

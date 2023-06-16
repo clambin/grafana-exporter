@@ -13,6 +13,7 @@ func main() {
 		opts.Level = slog.LevelDebug
 	}
 	slog.SetDefault(slog.New(slog.NewTextHandler(os.Stderr, &opts)))
+	slog.Debug("debug mode")
 
 	if err := cli.RootCmd.Execute(); err != nil {
 		os.Exit(1)
