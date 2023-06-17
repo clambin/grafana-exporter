@@ -24,11 +24,24 @@ func TestMockedWriter(t *testing.T) {
 		wantFlushErr   assert.ErrorAssertionFunc
 	}{
 		{
+			name: "new",
+			mockParameters: []mockParameters{
+				{methodName: "Initialize", returnValues: []any{nil}},
+				{methodName: "GetCurrent", arguments: []any{"/tmp/foo/bar.txt"}, returnValues: []any{nil, os.ErrNotExist}},
+				//{methodName: "Mkdir", arguments: []any{"/tmp/foo"}, returnValues: []any{nil}},
+				{methodName: "Add", arguments: []any{"/tmp/foo/bar.txt", []byte("hello")}, returnValues: []any{nil}},
+				{methodName: "IsClean", returnValues: []any{false, nil}},
+				{methodName: "Store", returnValues: []any{nil}},
+			},
+			wantWriteErr: assert.NoError,
+			wantFlushErr: assert.NoError,
+		},
+		{
 			name: "change",
 			mockParameters: []mockParameters{
 				{methodName: "Initialize", returnValues: []any{nil}},
 				{methodName: "GetCurrent", arguments: []any{"/tmp/foo/bar.txt"}, returnValues: []any{[]byte("old"), nil}},
-				{methodName: "Mkdir", arguments: []any{"/tmp/foo"}, returnValues: []any{nil}},
+				//{methodName: "Mkdir", arguments: []any{"/tmp/foo"}, returnValues: []any{nil}},
 				{methodName: "Add", arguments: []any{"/tmp/foo/bar.txt", []byte("hello")}, returnValues: []any{nil}},
 				{methodName: "IsClean", returnValues: []any{false, nil}},
 				{methodName: "Store", returnValues: []any{nil}},
@@ -47,24 +60,21 @@ func TestMockedWriter(t *testing.T) {
 			wantFlushErr: assert.NoError,
 		},
 		{
-			name: "new",
+			name: "error",
 			mockParameters: []mockParameters{
 				{methodName: "Initialize", returnValues: []any{nil}},
-				{methodName: "GetCurrent", arguments: []any{"/tmp/foo/bar.txt"}, returnValues: []any{nil, os.ErrNotExist}},
-				{methodName: "Mkdir", arguments: []any{"/tmp/foo"}, returnValues: []any{nil}},
-				{methodName: "Add", arguments: []any{"/tmp/foo/bar.txt", []byte("hello")}, returnValues: []any{nil}},
-				{methodName: "IsClean", returnValues: []any{false, nil}},
-				{methodName: "Store", returnValues: []any{nil}},
+				{methodName: "GetCurrent", arguments: []any{"/tmp/foo/bar.txt"}, returnValues: []any{nil, os.ErrPermission}},
+				//{methodName: "Mkdir", arguments: []any{"/tmp/foo"}, returnValues: []any{os.ErrPermission}},
 			},
-			wantWriteErr: assert.NoError,
-			wantFlushErr: assert.NoError,
+			wantWriteErr: assert.Error,
 		},
 		{
 			name: "error",
 			mockParameters: []mockParameters{
 				{methodName: "Initialize", returnValues: []any{nil}},
-				{methodName: "GetCurrent", arguments: []any{"/tmp/foo/bar.txt"}, returnValues: []any{nil, os.ErrNotExist}},
-				{methodName: "Mkdir", arguments: []any{"/tmp/foo"}, returnValues: []any{os.ErrPermission}},
+				{methodName: "GetCurrent", arguments: []any{"/tmp/foo/bar.txt"}, returnValues: []any{[]byte("old"), nil}},
+				//{methodName: "Mkdir", arguments: []any{"/tmp/foo"}, returnValues: []any{os.ErrPermission}},
+				{methodName: "Add", arguments: []any{"/tmp/foo/bar.txt", []byte("hello")}, returnValues: []any{os.ErrPermission}},
 			},
 			wantWriteErr: assert.Error,
 		},

@@ -4,7 +4,6 @@ import (
 	"bytes"
 	"errors"
 	"fmt"
-	"golang.org/x/exp/slog"
 	"os"
 	"path"
 )
@@ -15,7 +14,6 @@ import (
 type StorageHandler interface {
 	Initialize() error
 	GetCurrent(string) ([]byte, error)
-	Mkdir(string) error
 	Add(string, []byte) error
 	IsClean() (bool, error)
 	Store() error
@@ -27,19 +25,12 @@ type Writer struct {
 }
 
 func (w *Writer) AddFile(filename string, content []byte) error {
-	slog.Debug("adding file", "filename", filename)
 	fullFilename := path.Join(w.BaseDirectory, filename)
 	current, err := w.StorageHandler.GetCurrent(fullFilename)
 	if err != nil && !errors.Is(err, os.ErrNotExist) {
 		return fmt.Errorf("get current: %w", err)
 	} else if bytes.Equal(current, content) {
 		return nil
-	}
-
-	dirname := path.Dir(fullFilename)
-	if err = w.StorageHandler.Mkdir(dirname); err != nil && !errors.Is(err, os.ErrExist) {
-		slog.Error("mkdir failed", "err", err)
-		return err
 	}
 
 	if err = w.StorageHandler.Add(fullFilename, content); err != nil {

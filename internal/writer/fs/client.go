@@ -1,9 +1,11 @@
 package fs
 
 import (
+	"errors"
+	"fmt"
 	"github.com/clambin/grafana-exporter/internal/writer"
-	"golang.org/x/exp/slog"
 	"os"
+	"path"
 )
 
 var _ writer.StorageHandler = &Client{}
@@ -26,12 +28,12 @@ func (c *Client) GetCurrent(s string) ([]byte, error) {
 	return os.ReadFile(s)
 }
 
-func (c *Client) Mkdir(s string) error {
-	slog.Debug("creating local directory")
-	return os.MkdirAll(s, 0755)
-}
-
 func (c *Client) Add(s string, bytes []byte) error {
+	dirname := path.Dir(s)
+	if err := os.MkdirAll(dirname, 0755); err != nil && !errors.Is(err, os.ErrExist) {
+		return fmt.Errorf("mkdir %s: %w", dirname, err)
+	}
+
 	c.files = append(c.files, fileToStore{filename: s, content: bytes})
 	return nil
 }

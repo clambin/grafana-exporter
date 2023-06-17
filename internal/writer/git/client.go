@@ -58,10 +58,6 @@ func (c *Client) GetCurrent(filename string) ([]byte, error) {
 	return io.ReadAll(file)
 }
 
-func (c *Client) Mkdir(_ string) error {
-	return nil
-}
-
 func (c *Client) Add(filename string, content []byte) error {
 	f, err := c.FS.Create(filename)
 	if err != nil {
