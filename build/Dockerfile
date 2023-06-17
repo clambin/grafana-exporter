@@ -11,8 +11,8 @@ ARG TARGETOS
 ARG TARGETARCH
 
 COPY bld/grafana-exporter-$TARGETOS-$TARGETARCH /app/grafana-exporter
-COPY init/grafana-exporter.sh .
+# COPY init/grafana-exporter.sh .
 
 USER abc
-ENTRYPOINT ["/bin/sh", "/app/grafana-exporter.sh"]
+ENTRYPOINT ["/app/grafana-exporter"]
 CMD []

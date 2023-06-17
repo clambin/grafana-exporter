@@ -2,6 +2,8 @@ package writer_test
 
 import (
 	"github.com/clambin/grafana-exporter/internal/writer"
+	"github.com/clambin/grafana-exporter/internal/writer/fs"
+	"github.com/clambin/grafana-exporter/internal/writer/mocks"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 	"os"
@@ -9,67 +11,139 @@ import (
 	"testing"
 )
 
-func TestDiskWriter_Write(t *testing.T) {
-	tmpdir, err := os.MkdirTemp("", "")
-	require.NoError(t, err)
-
-	w := writer.NewDiskWriter(tmpdir)
-
-	content := writer.Directories{
-		"foo": writer.Files{
-			"foo.yaml": []byte("hello"),
+func TestMockedWriter(t *testing.T) {
+	type mockParameters struct {
+		methodName   string
+		arguments    []any
+		returnValues []any
+	}
+	testcases := []struct {
+		name           string
+		mockParameters []mockParameters
+		wantWriteErr   assert.ErrorAssertionFunc
+		wantFlushErr   assert.ErrorAssertionFunc
+	}{
+		{
+			name: "new",
+			mockParameters: []mockParameters{
+				{methodName: "Initialize", returnValues: []any{nil}},
+				{methodName: "GetCurrent", arguments: []any{"/tmp/foo/bar.txt"}, returnValues: []any{nil, os.ErrNotExist}},
+				//{methodName: "Mkdir", arguments: []any{"/tmp/foo"}, returnValues: []any{nil}},
+				{methodName: "Add", arguments: []any{"/tmp/foo/bar.txt", []byte("hello")}, returnValues: []any{nil}},
+				{methodName: "IsClean", returnValues: []any{false, nil}},
+				{methodName: "Store", returnValues: []any{nil}},
+			},
+			wantWriteErr: assert.NoError,
+			wantFlushErr: assert.NoError,
 		},
-		"bar": writer.Files{
-			"bar.yaml":   []byte("world"),
-			"snafu.yaml": []byte(""),
+		{
+			name: "change",
+			mockParameters: []mockParameters{
+				{methodName: "Initialize", returnValues: []any{nil}},
+				{methodName: "GetCurrent", arguments: []any{"/tmp/foo/bar.txt"}, returnValues: []any{[]byte("old"), nil}},
+				//{methodName: "Mkdir", arguments: []any{"/tmp/foo"}, returnValues: []any{nil}},
+				{methodName: "Add", arguments: []any{"/tmp/foo/bar.txt", []byte("hello")}, returnValues: []any{nil}},
+				{methodName: "IsClean", returnValues: []any{false, nil}},
+				{methodName: "Store", returnValues: []any{nil}},
+			},
+			wantWriteErr: assert.NoError,
+			wantFlushErr: assert.NoError,
+		},
+		{
+			name: "no change",
+			mockParameters: []mockParameters{
+				{methodName: "Initialize", returnValues: []any{nil}},
+				{methodName: "GetCurrent", arguments: []any{"/tmp/foo/bar.txt"}, returnValues: []any{[]byte("hello"), nil}},
+				{methodName: "IsClean", returnValues: []any{true, nil}},
+			},
+			wantWriteErr: assert.NoError,
+			wantFlushErr: assert.NoError,
+		},
+		{
+			name: "error",
+			mockParameters: []mockParameters{
+				{methodName: "Initialize", returnValues: []any{nil}},
+				{methodName: "GetCurrent", arguments: []any{"/tmp/foo/bar.txt"}, returnValues: []any{nil, os.ErrPermission}},
+				//{methodName: "Mkdir", arguments: []any{"/tmp/foo"}, returnValues: []any{os.ErrPermission}},
+			},
+			wantWriteErr: assert.Error,
+		},
+		{
+			name: "error",
+			mockParameters: []mockParameters{
+				{methodName: "Initialize", returnValues: []any{nil}},
+				{methodName: "GetCurrent", arguments: []any{"/tmp/foo/bar.txt"}, returnValues: []any{[]byte("old"), nil}},
+				//{methodName: "Mkdir", arguments: []any{"/tmp/foo"}, returnValues: []any{os.ErrPermission}},
+				{methodName: "Add", arguments: []any{"/tmp/foo/bar.txt", []byte("hello")}, returnValues: []any{os.ErrPermission}},
+			},
+			wantWriteErr: assert.Error,
 		},
 	}
 
-	require.NoError(t, w.Write(content))
+	for _, tt := range testcases {
+		t.Run(tt.name, func(t *testing.T) {
+			r := mocks.NewStorageHandler(t)
+			w := writer.Writer{StorageHandler: r, BaseDirectory: "/tmp"}
 
-	checkFile(t, tmpdir, "foo/foo.yaml", "hello")
-	checkFile(t, tmpdir, "bar/bar.yaml", "world")
-	checkFile(t, tmpdir, "bar/snafu.yaml", "")
+			for _, m := range tt.mockParameters {
+				r.On(m.methodName, m.arguments...).Return(m.returnValues...).Once()
+			}
 
-	assert.NoError(t, w.Write(content))
-
-	require.NoError(t, os.RemoveAll(tmpdir))
+			require.NoError(t, r.Initialize())
+			err := w.AddFile("foo/bar.txt", []byte("hello"))
+			tt.wantWriteErr(t, err)
+			if err == nil {
+				tt.wantFlushErr(t, w.Store())
+			}
+		})
+	}
 }
 
-func checkFile(t *testing.T, tmpdir string, filename string, expected string) {
-	t.Helper()
+func TestFSWriter(t *testing.T) {
+	testcases := []struct {
+		name    string
+		content []byte
+		clean   bool
+	}{
+		{
+			name:    "new",
+			content: []byte("hello"),
+		},
+		{
+			name:    "change",
+			content: []byte("world"),
+		},
+		{
+			name:    "no change",
+			content: []byte("world"),
+			clean:   true,
+		},
+	}
 
-	content, err := os.ReadFile(path.Join(tmpdir, filename))
-	require.NoError(t, err)
-	assert.Equal(t, expected, string(content))
-}
-
-func TestDiskWriter_Write_Error(t *testing.T) {
 	tmpdir, err := os.MkdirTemp("", "")
 	require.NoError(t, err)
-	require.NoError(t, os.Chmod(tmpdir, 000))
 
-	w := writer.NewDiskWriter(tmpdir)
-	assert.Error(t, w.Write(writer.Directories{
-		"foo": writer.Files{
-			"foo.yaml": []byte("hello"),
-		},
-	}))
-	require.NoError(t, os.RemoveAll(tmpdir))
-}
+	w := writer.Writer{
+		StorageHandler: &fs.Client{},
+		BaseDirectory:  tmpdir,
+	}
+	require.NoError(t, w.Initialize())
 
-func TestDiskWriter_Write_Error_2(t *testing.T) {
-	tmpdir, err := os.MkdirTemp("", "")
-	require.NoError(t, err)
-	w := writer.NewDiskWriter(tmpdir)
+	for _, tt := range testcases {
+		t.Run(tt.name, func(t *testing.T) {
+			assert.NoError(t, w.AddFile("foo/bar.txt", tt.content))
 
-	require.NoError(t, os.MkdirAll(path.Join(tmpdir, "foo"), 000))
+			clean, err := w.IsClean()
+			require.NoError(t, err)
+			assert.Equal(t, tt.clean, clean)
 
-	assert.Error(t, w.Write(writer.Directories{
-		"foo": writer.Files{
-			"foo.yaml": []byte("hello"),
-		},
-	}))
+			assert.NoError(t, w.Store())
 
-	require.NoError(t, os.RemoveAll(tmpdir))
+			content, err := os.ReadFile(path.Join(tmpdir, "foo/bar.txt"))
+			require.NoError(t, err)
+			assert.Equal(t, tt.content, content)
+		})
+	}
+
+	assert.NoError(t, os.RemoveAll(tmpdir))
 }

@@ -1,0 +1,38 @@
+apiVersion: 1
+datasources:
+  - id: 0
+    uid: ""
+    name: prometheus
+    type: prometheus
+    url: http://monitoring-prometheus-mock.monitoring.svc:80
+    access: ""
+    readonly: false
+    database: ""
+    user: ""
+    password: ""
+    orgid: 0
+    isdefault: false
+    basicauth: false
+    basicauthuser: ""
+    basicauthpassword: ""
+    jsondata: {}
+    securejsondata: {}
+  - id: 0
+    uid: ""
+    name: postgres
+    type: postgres
+    url: http://postgres.default:5432
+    access: ""
+    readonly: false
+    database: ""
+    user: ""
+    password: ""
+    orgid: 0
+    isdefault: false
+    basicauth: false
+    basicauthuser: ""
+    basicauthpassword: ""
+    jsondata:
+      postgresVersion: 1200
+      sslmode: disable
+    securejsondata: {}

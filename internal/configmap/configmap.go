@@ -2,7 +2,6 @@ package configmap
 
 import (
 	"bytes"
-	"github.com/clambin/grafana-exporter/internal/writer"
 	"github.com/gosimple/slug"
 	"gopkg.in/yaml.v3"
 )
@@ -24,7 +23,7 @@ type metadata struct {
 // Serialize creates a ConfigMap that contains the specified files. If the files are dashboards (folder is not blank),
 // it will add the necessary metadata (i.e. grafana_dashboard label and grafana_folder annotation, so Grafana will
 // detect them as dashboards and import them.
-func Serialize(files writer.Files, configMapName, namespace, folder string) (string, []byte, error) {
+func Serialize(files map[string][]byte, configMapName, namespace, folder string) (string, []byte, error) {
 	filesAsString := make(map[string]string)
 	for filename, content := range files {
 		filesAsString[filename] = string(content)

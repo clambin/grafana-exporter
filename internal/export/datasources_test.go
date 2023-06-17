@@ -1,8 +1,10 @@
-package commands_test
+package export_test
 
 import (
-	"github.com/clambin/grafana-exporter/internal/commands"
+	"github.com/clambin/grafana-exporter/internal/export"
 	"github.com/clambin/grafana-exporter/internal/fetcher"
+	"github.com/clambin/grafana-exporter/internal/writer"
+	"github.com/clambin/grafana-exporter/internal/writer/fs"
 	gapi "github.com/grafana/grafana-api-golang-client"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
@@ -14,40 +16,43 @@ import (
 
 func TestExportDataSources(t *testing.T) {
 	testcases := []struct {
-		name      string
-		cfg       commands.Config
-		directory string
-		filename  string
+		name     string
+		cfg      export.Config
+		filename string
 	}{
 		{
-			name:      "direct",
-			directory: ".",
-			filename:  "datasources.yml",
+			name:     "direct",
+			filename: "datasources.yml",
 		},
 		{
-			name:      "configmap",
-			cfg:       commands.Config{AsConfigMap: true, Namespace: "default"},
-			directory: ".",
-			filename:  "datasources.yml",
+			name:     "configmap",
+			cfg:      export.Config{AsConfigMap: true, Namespace: "default"},
+			filename: "datasources.yml",
 		},
 	}
 
 	for _, tt := range testcases {
 		t.Run(tt.name, func(t *testing.T) {
-			f := fakeDataSourcesClient{}
-			w := fakeWriter{}
-			err := commands.ExportDataSources(&f, &w, tt.cfg)
+			tmpdir, err := os.MkdirTemp("", "")
 			require.NoError(t, err)
-			require.Contains(t, w, ".")
-			require.Contains(t, w["."], "datasources.yml")
+
+			f := fakeDataSourcesClient{}
+			w := writer.Writer{StorageHandler: &fs.Client{}, BaseDirectory: tmpdir}
+
+			require.NoError(t, export.ExportDataSources(&f, &w, tt.cfg))
+
+			content, err := os.ReadFile(path.Join(tmpdir, tt.filename))
+			require.NoError(t, err)
 
 			gp := path.Join("testdata", strings.ToLower(t.Name())+".yaml")
 			if *update {
-				require.NoError(t, os.WriteFile(gp, w["."]["datasources.yml"], 0644))
+				require.NoError(t, os.WriteFile(gp, content, 0644))
 			}
 			golden, err := os.ReadFile(gp)
 			require.NoError(t, err)
-			assert.Equal(t, string(golden), string(w["."]["datasources.yml"]))
+			assert.Equal(t, string(golden), string(content))
+
+			assert.NoError(t, os.RemoveAll(tmpdir))
 		})
 	}
 

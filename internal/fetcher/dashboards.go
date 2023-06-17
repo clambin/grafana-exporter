@@ -17,7 +17,7 @@ type Board struct {
 	Model map[string]any
 }
 
-func FetchDashboards(c DashboardClient, exportedFolders set.Set[string]) (map[string][]Board, error) {
+func FetchDashboards(c DashboardClient, foldersToExport set.Set[string]) (map[string][]Board, error) {
 	foundBoards, err := c.Dashboards()
 	if err != nil {
 		return nil, fmt.Errorf("grafana search: %w", err)
@@ -34,7 +34,7 @@ func FetchDashboards(c DashboardClient, exportedFolders set.Set[string]) (map[st
 		}
 
 		// Only export if the dashboard is in a specified folder
-		if len(exportedFolders) == 0 || !exportedFolders.Contains(board.FolderTitle) {
+		if len(foldersToExport) > 0 && !foldersToExport.Contains(board.FolderTitle) {
 			slog.Debug("folder not in scope. ignoring", "folderTitle", board.FolderTitle, "title", board.Title)
 			continue
 		}
