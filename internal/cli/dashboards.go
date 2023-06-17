@@ -32,7 +32,7 @@ func exportDashboards(_ *cobra.Command, _ []string) error {
 		return fmt.Errorf("grafana connect: %w", err)
 	}
 
-	return export.ExportDashboards(c, w, export.Config{
+	return export.Dashboards(c, w, export.Config{
 		AsConfigMap: !viper.GetBool("direct"),
 		Namespace:   viper.GetString("namespace"),
 		Folders:     strings.Split(viper.GetString("folders"), ","),

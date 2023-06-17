@@ -29,7 +29,7 @@ func ExportDataSources(_ *cobra.Command, _ []string) error {
 	if err != nil {
 		return fmt.Errorf("grafana connect: %w", err)
 	}
-	return export.ExportDataSources(c, w, export.Config{
+	return export.DataSources(c, w, export.Config{
 		AsConfigMap: !viper.GetBool("direct"),
 		Namespace:   viper.GetString("namespace"),
 	})

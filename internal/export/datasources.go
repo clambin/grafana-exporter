@@ -10,7 +10,7 @@ import (
 	"gopkg.in/yaml.v3"
 )
 
-func ExportDataSources(f fetcher.DataSourcesClient, w *writer.Writer, cfg Config) error {
+func DataSources(f fetcher.DataSourcesClient, w *writer.Writer, cfg Config) error {
 	sources, err := f.DataSources()
 	if err != nil {
 		return fmt.Errorf("grafana get datasources: %w", err)

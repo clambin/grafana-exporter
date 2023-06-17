@@ -39,7 +39,7 @@ func TestExportDataSources(t *testing.T) {
 			f := fakeDataSourcesClient{}
 			w := writer.Writer{StorageHandler: &fs.Client{}, BaseDirectory: tmpdir}
 
-			require.NoError(t, export.ExportDataSources(&f, &w, tt.cfg))
+			require.NoError(t, export.DataSources(&f, &w, tt.cfg))
 
 			content, err := os.ReadFile(path.Join(tmpdir, tt.filename))
 			require.NoError(t, err)

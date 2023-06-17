@@ -58,7 +58,7 @@ func TestExportDashboards(t *testing.T) {
 			f := fakeDashboardClient{}
 			w := writer.Writer{StorageHandler: &fs.Client{}, BaseDirectory: tmpdir}
 
-			err = export.ExportDashboards(&f, &w, tt.cfg)
+			err = export.Dashboards(&f, &w, tt.cfg)
 			require.NoError(t, err)
 
 			for _, filename := range tt.filenames {
