@@ -1,8 +1,8 @@
-package commands_test
+package export_test
 
 import (
 	"fmt"
-	"github.com/clambin/grafana-exporter/internal/commands"
+	"github.com/clambin/grafana-exporter/internal/export"
 	"github.com/clambin/grafana-exporter/internal/fetcher"
 	"github.com/clambin/grafana-exporter/internal/writer"
 	"github.com/clambin/grafana-exporter/internal/writer/fs"
@@ -20,32 +20,32 @@ import (
 func TestExportDashboards(t *testing.T) {
 	testcases := []struct {
 		name      string
-		cfg       commands.Config
+		cfg       export.Config
 		filenames []string
 	}{
 		{
 			name:      "configmap - bar",
-			cfg:       commands.Config{AsConfigMap: true, Namespace: "default", Folders: []string{"bar"}},
+			cfg:       export.Config{AsConfigMap: true, Namespace: "default", Folders: []string{"bar"}},
 			filenames: []string{"grafana-dashboards-bar.yml"},
 		},
 		{
 			name:      "configmap - foobar",
-			cfg:       commands.Config{AsConfigMap: true, Namespace: "default", Folders: []string{"foobar"}},
+			cfg:       export.Config{AsConfigMap: true, Namespace: "default", Folders: []string{"foobar"}},
 			filenames: []string{"grafana-dashboards-foobar.yml"},
 		},
 		{
 			name:      "configmap - both",
-			cfg:       commands.Config{AsConfigMap: true, Namespace: "default", Folders: []string{"bar", "foobar"}},
+			cfg:       export.Config{AsConfigMap: true, Namespace: "default", Folders: []string{"bar", "foobar"}},
 			filenames: []string{"grafana-dashboards-bar.yml", "grafana-dashboards-foobar.yml"},
 		},
 		{
 			name:      "direct - bar",
-			cfg:       commands.Config{Folders: []string{"bar"}},
+			cfg:       export.Config{Folders: []string{"bar"}},
 			filenames: []string{"bar/foo.json"},
 		},
 		{
 			name:      "direct - foobar",
-			cfg:       commands.Config{Folders: []string{"foobar"}},
+			cfg:       export.Config{Folders: []string{"foobar"}},
 			filenames: []string{"foobar/snafu.json"},
 		},
 	}
@@ -58,7 +58,7 @@ func TestExportDashboards(t *testing.T) {
 			f := fakeDashboardClient{}
 			w := writer.Writer{StorageHandler: &fs.Client{}, BaseDirectory: tmpdir}
 
-			err = commands.ExportDashboards(&f, &w, tt.cfg)
+			err = export.ExportDashboards(&f, &w, tt.cfg)
 			require.NoError(t, err)
 
 			for _, filename := range tt.filenames {

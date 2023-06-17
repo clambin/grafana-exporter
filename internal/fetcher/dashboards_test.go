@@ -11,15 +11,40 @@ import (
 )
 
 func TestFetchDashboards(t *testing.T) {
-	result, err := fetcher.FetchDashboards(&fakeDashboardFetcher{}, set.Create("foo"))
-	require.NoError(t, err)
-	assert.Len(t, result, 1)
+	testcases := []struct {
+		name    string
+		folders set.Set[string]
+		boards  []string
+		titles  []string
+	}{
+		{
+			name:    "all folders",
+			folders: set.Create[string](),
+			boards:  []string{"foo", "bar"},
+			titles:  []string{"board 1", "board 2"},
+		},
+		{
+			name:    "filters",
+			folders: set.Create("foo"),
+			boards:  []string{"foo"},
+			titles:  []string{"board 1"},
+		},
+	}
 
-	boards, ok := result["foo"]
-	require.True(t, ok)
-	require.Len(t, boards, 1)
+	for _, tt := range testcases {
+		t.Run(tt.name, func(t *testing.T) {
+			result, err := fetcher.FetchDashboards(&fakeDashboardFetcher{}, tt.folders)
+			require.NoError(t, err)
+			assert.Len(t, result, len(tt.boards))
 
-	assert.Equal(t, "board 1", boards[0].Title)
+			for idx, board := range tt.boards {
+				b, ok := result[board]
+				require.Truef(t, ok, board)
+				require.Lenf(t, b, 1, board)
+				assert.Equalf(t, tt.titles[idx], b[0].Title, board)
+			}
+		})
+	}
 }
 
 var _ fetcher.DashboardClient = &fakeDashboardFetcher{}

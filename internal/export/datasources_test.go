@@ -1,7 +1,7 @@
-package commands_test
+package export_test
 
 import (
-	"github.com/clambin/grafana-exporter/internal/commands"
+	"github.com/clambin/grafana-exporter/internal/export"
 	"github.com/clambin/grafana-exporter/internal/fetcher"
 	"github.com/clambin/grafana-exporter/internal/writer"
 	"github.com/clambin/grafana-exporter/internal/writer/fs"
@@ -17,7 +17,7 @@ import (
 func TestExportDataSources(t *testing.T) {
 	testcases := []struct {
 		name     string
-		cfg      commands.Config
+		cfg      export.Config
 		filename string
 	}{
 		{
@@ -26,7 +26,7 @@ func TestExportDataSources(t *testing.T) {
 		},
 		{
 			name:     "configmap",
-			cfg:      commands.Config{AsConfigMap: true, Namespace: "default"},
+			cfg:      export.Config{AsConfigMap: true, Namespace: "default"},
 			filename: "datasources.yml",
 		},
 	}
@@ -39,7 +39,7 @@ func TestExportDataSources(t *testing.T) {
 			f := fakeDataSourcesClient{}
 			w := writer.Writer{StorageHandler: &fs.Client{}, BaseDirectory: tmpdir}
 
-			require.NoError(t, commands.ExportDataSources(&f, &w, tt.cfg))
+			require.NoError(t, export.ExportDataSources(&f, &w, tt.cfg))
 
 			content, err := os.ReadFile(path.Join(tmpdir, tt.filename))
 			require.NoError(t, err)

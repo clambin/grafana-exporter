@@ -1,4 +1,4 @@
-package commands
+package export
 
 type Config struct {
 	AsConfigMap bool

@@ -1,4 +1,4 @@
-package commands_test
+package export_test
 
 import (
 	"flag"

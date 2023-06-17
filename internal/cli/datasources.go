@@ -2,7 +2,7 @@ package cli
 
 import (
 	"fmt"
-	"github.com/clambin/grafana-exporter/internal/commands"
+	"github.com/clambin/grafana-exporter/internal/export"
 	gapi "github.com/grafana/grafana-api-golang-client"
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
@@ -29,7 +29,7 @@ func ExportDataSources(_ *cobra.Command, _ []string) error {
 	if err != nil {
 		return fmt.Errorf("grafana connect: %w", err)
 	}
-	return commands.ExportDataSources(c, w, commands.Config{
+	return export.ExportDataSources(c, w, export.Config{
 		AsConfigMap: !viper.GetBool("direct"),
 		Namespace:   viper.GetString("namespace"),
 	})

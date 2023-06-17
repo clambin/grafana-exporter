@@ -2,7 +2,7 @@ package cli
 
 import (
 	"fmt"
-	"github.com/clambin/grafana-exporter/internal/commands"
+	"github.com/clambin/grafana-exporter/internal/export"
 	gapi "github.com/grafana/grafana-api-golang-client"
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
@@ -11,7 +11,7 @@ import (
 )
 
 var (
-	DashboardsCmd = &cobra.Command{
+	dashboardsCmd = &cobra.Command{
 		Use:   "dashboards",
 		Short: "export Grafana dashboards",
 		RunE:  exportDashboards,
@@ -32,7 +32,7 @@ func exportDashboards(_ *cobra.Command, _ []string) error {
 		return fmt.Errorf("grafana connect: %w", err)
 	}
 
-	return commands.ExportDashboards(c, w, commands.Config{
+	return export.ExportDashboards(c, w, export.Config{
 		AsConfigMap: !viper.GetBool("direct"),
 		Namespace:   viper.GetString("namespace"),
 		Folders:     strings.Split(viper.GetString("folders"), ","),

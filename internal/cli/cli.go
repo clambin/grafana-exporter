@@ -17,10 +17,10 @@ var (
 
 func init() {
 	cobra.OnInitialize(initConfig)
+	initArgs()
+}
 
-	RootCmd.AddCommand(DashboardsCmd)
-	RootCmd.AddCommand(datasourcesCmd)
-
+func initArgs() {
 	RootCmd.Version = version.BuildVersion
 
 	RootCmd.PersistentFlags().StringVarP(&configFilename, "config", "c", "", "Configuration file")
@@ -39,6 +39,12 @@ func init() {
 	_ = viper.BindPFlag("grafana.token", RootCmd.PersistentFlags().Lookup("grafana.token"))
 	_ = viper.BindPFlag("out", RootCmd.PersistentFlags().Lookup("out"))
 	_ = viper.BindPFlag("mode", RootCmd.PersistentFlags().Lookup("mode"))
+
+	dashboardsCmd.PersistentFlags().StringP("folders", "f", "", "Dashboard folders to export")
+	_ = viper.BindPFlag("folders", RootCmd.PersistentFlags().Lookup("folders"))
+	RootCmd.AddCommand(dashboardsCmd)
+
+	RootCmd.AddCommand(datasourcesCmd)
 }
 
 func initConfig() {
