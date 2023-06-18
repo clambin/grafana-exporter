@@ -31,7 +31,7 @@ func TestMockedWriter(t *testing.T) {
 				//{methodName: "Mkdir", arguments: []any{"/tmp/foo"}, returnValues: []any{nil}},
 				{methodName: "Add", arguments: []any{"/tmp/foo/bar.txt", []byte("hello")}, returnValues: []any{nil}},
 				{methodName: "IsClean", returnValues: []any{false, nil}},
-				{methodName: "Store", returnValues: []any{nil}},
+				{methodName: "Store", arguments: []any{"foo"}, returnValues: []any{nil}},
 			},
 			wantWriteErr: assert.NoError,
 			wantFlushErr: assert.NoError,
@@ -44,7 +44,7 @@ func TestMockedWriter(t *testing.T) {
 				//{methodName: "Mkdir", arguments: []any{"/tmp/foo"}, returnValues: []any{nil}},
 				{methodName: "Add", arguments: []any{"/tmp/foo/bar.txt", []byte("hello")}, returnValues: []any{nil}},
 				{methodName: "IsClean", returnValues: []any{false, nil}},
-				{methodName: "Store", returnValues: []any{nil}},
+				{methodName: "Store", arguments: []any{"foo"}, returnValues: []any{nil}},
 			},
 			wantWriteErr: assert.NoError,
 			wantFlushErr: assert.NoError,
@@ -93,7 +93,7 @@ func TestMockedWriter(t *testing.T) {
 			err := w.AddFile("foo/bar.txt", []byte("hello"))
 			tt.wantWriteErr(t, err)
 			if err == nil {
-				tt.wantFlushErr(t, w.Store())
+				tt.wantFlushErr(t, w.Store("foo"))
 			}
 		})
 	}
@@ -137,7 +137,7 @@ func TestFSWriter(t *testing.T) {
 			require.NoError(t, err)
 			assert.Equal(t, tt.clean, clean)
 
-			assert.NoError(t, w.Store())
+			assert.NoError(t, w.Store(""))
 
 			content, err := os.ReadFile(path.Join(tmpdir, "foo/bar.txt"))
 			require.NoError(t, err)

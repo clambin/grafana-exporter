@@ -87,13 +87,13 @@ func (_m *StorageHandler) IsClean() (bool, error) {
 	return r0, r1
 }
 
-// Store provides a mock function with given fields:
-func (_m *StorageHandler) Store() error {
-	ret := _m.Called()
+// Store provides a mock function with given fields: msg
+func (_m *StorageHandler) Store(msg string) error {
+	ret := _m.Called(msg)
 
 	var r0 error
-	if rf, ok := ret.Get(0).(func() error); ok {
-		r0 = rf()
+	if rf, ok := ret.Get(0).(func(string) error); ok {
+		r0 = rf(msg)
 	} else {
 		r0 = ret.Error(0)
 	}

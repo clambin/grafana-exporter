@@ -29,7 +29,7 @@ func DataSources(f fetcher.DataSourcesClient, w *writer.Writer, cfg Config) erro
 	if err = w.AddFile("datasources.yml", content); err != nil {
 		return fmt.Errorf("write: %w", err)
 	}
-	return w.Store()
+	return w.Store("Automated export of Grafana datasources")
 }
 
 type dataSources struct {

@@ -35,7 +35,7 @@ func Dashboards(f fetcher.DashboardClient, w *writer.Writer, cfg Config) error {
 			return fmt.Errorf("write %s: %w", filename, err)
 		}
 	}
-	return w.Store()
+	return w.Store("Automated export of Grafana dashboards")
 }
 
 func exportDashboardsAsFiles(boards map[string][]fetcher.Board) (map[string][]byte, error) {

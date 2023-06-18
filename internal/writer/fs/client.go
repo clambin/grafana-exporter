@@ -42,7 +42,7 @@ func (c *Client) IsClean() (bool, error) {
 	return len(c.files) == 0, nil
 }
 
-func (c *Client) Store() error {
+func (c *Client) Store(_ string) error {
 	for _, file := range c.files {
 		if err := os.WriteFile(file.filename, file.content, 0644); err != nil {
 			return err

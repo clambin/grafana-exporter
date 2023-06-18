@@ -86,7 +86,7 @@ func (c *Client) IsClean() (bool, error) {
 	return status.IsClean(), nil
 }
 
-func (c *Client) Store() error {
+func (c *Client) Store(msg string) error {
 	tree, err := c.Repo.Worktree()
 	if err != nil {
 		return fmt.Errorf("worktree: %w", err)
@@ -94,7 +94,7 @@ func (c *Client) Store() error {
 	if _, err = tree.Add("."); err != nil {
 		return fmt.Errorf("add: %w", err)
 	}
-	if _, err = tree.Commit("Exported Grafana dashboards", &git.CommitOptions{
+	if _, err = tree.Commit(msg, &git.CommitOptions{
 		All:               false,
 		AllowEmptyCommits: false,
 		Author: &object.Signature{

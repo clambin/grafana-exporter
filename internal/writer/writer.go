@@ -16,7 +16,7 @@ type StorageHandler interface {
 	GetCurrent(string) ([]byte, error)
 	Add(string, []byte) error
 	IsClean() (bool, error)
-	Store() error
+	Store(msg string) error
 }
 
 type Writer struct {
@@ -39,9 +39,9 @@ func (w *Writer) AddFile(filename string, content []byte) error {
 	return nil
 }
 
-func (w *Writer) Store() error {
+func (w *Writer) Store(msg string) error {
 	if isClean, err := w.IsClean(); err != nil || isClean {
 		return err
 	}
-	return w.StorageHandler.Store()
+	return w.StorageHandler.Store(msg)
 }
