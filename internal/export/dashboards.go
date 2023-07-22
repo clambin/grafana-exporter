@@ -18,10 +18,10 @@ func Dashboards(f fetcher.DashboardClient, w *writer.Writer, cfg Config) error {
 	}
 
 	var files map[string][]byte
-	if cfg.AsConfigMap {
-		files, err = exportDashboardsAsConfigMaps(dashboards, cfg)
-	} else {
+	if cfg.Direct {
 		files, err = exportDashboardsAsFiles(dashboards)
+	} else {
+		files, err = exportDashboardsAsConfigMaps(dashboards, cfg)
 	}
 	if err != nil {
 		return fmt.Errorf("export: %w", err)

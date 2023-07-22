@@ -22,11 +22,12 @@ func TestExportDataSources(t *testing.T) {
 	}{
 		{
 			name:     "direct",
+			cfg:      export.Config{Direct: true},
 			filename: "datasources.yml",
 		},
 		{
 			name:     "configmap",
-			cfg:      export.Config{AsConfigMap: true, Namespace: "default"},
+			cfg:      export.Config{Namespace: "default"},
 			filename: "datasources.yml",
 		},
 	}

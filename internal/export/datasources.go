@@ -17,7 +17,7 @@ func DataSources(f fetcher.DataSourcesClient, w *writer.Writer, cfg Config) erro
 	}
 
 	content, err := exportDataSourcesAsFile(sources)
-	if err == nil && cfg.AsConfigMap {
+	if err == nil && !cfg.Direct {
 		_, content, err = configmap.Serialize(map[string][]byte{"datasources.yml": content}, "datasources", cfg.Namespace, "")
 	}
 	if err != nil {

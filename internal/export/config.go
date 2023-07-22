@@ -1,7 +1,7 @@
 package export
 
 type Config struct {
-	AsConfigMap bool
-	Namespace   string
-	Folders     []string
+	Direct    bool
+	Namespace string
+	Folders   []string
 }

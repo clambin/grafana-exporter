@@ -33,8 +33,8 @@ func exportDashboards(_ *cobra.Command, _ []string) error {
 	}
 
 	return export.Dashboards(c, w, export.Config{
-		AsConfigMap: !viper.GetBool("direct"),
-		Namespace:   viper.GetString("namespace"),
-		Folders:     strings.Split(viper.GetString("folders"), ","),
+		Direct:    viper.GetBool("direct"),
+		Namespace: viper.GetString("namespace"),
+		Folders:   strings.Split(viper.GetString("folders"), ","),
 	})
 }

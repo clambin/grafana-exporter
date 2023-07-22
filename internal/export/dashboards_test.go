@@ -25,27 +25,27 @@ func TestExportDashboards(t *testing.T) {
 	}{
 		{
 			name:      "configmap - bar",
-			cfg:       export.Config{AsConfigMap: true, Namespace: "default", Folders: []string{"bar"}},
+			cfg:       export.Config{Namespace: "default", Folders: []string{"bar"}},
 			filenames: []string{"grafana-dashboards-bar.yml"},
 		},
 		{
 			name:      "configmap - foobar",
-			cfg:       export.Config{AsConfigMap: true, Namespace: "default", Folders: []string{"foobar"}},
+			cfg:       export.Config{Namespace: "default", Folders: []string{"foobar"}},
 			filenames: []string{"grafana-dashboards-foobar.yml"},
 		},
 		{
 			name:      "configmap - both",
-			cfg:       export.Config{AsConfigMap: true, Namespace: "default", Folders: []string{"bar", "foobar"}},
+			cfg:       export.Config{Namespace: "default", Folders: []string{"bar", "foobar"}},
 			filenames: []string{"grafana-dashboards-bar.yml", "grafana-dashboards-foobar.yml"},
 		},
 		{
 			name:      "direct - bar",
-			cfg:       export.Config{Folders: []string{"bar"}},
+			cfg:       export.Config{Direct: true, Folders: []string{"bar"}},
 			filenames: []string{"bar/foo.json"},
 		},
 		{
 			name:      "direct - foobar",
-			cfg:       export.Config{Folders: []string{"foobar"}},
+			cfg:       export.Config{Direct: true, Folders: []string{"foobar"}},
 			filenames: []string{"foobar/snafu.json"},
 		},
 	}
