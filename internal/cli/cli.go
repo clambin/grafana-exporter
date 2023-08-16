@@ -4,7 +4,7 @@ import (
 	"github.com/clambin/grafana-exporter/version"
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
-	"golang.org/x/exp/slog"
+	"log/slog"
 )
 
 var (

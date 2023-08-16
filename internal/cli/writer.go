@@ -7,7 +7,7 @@ import (
 	"github.com/clambin/grafana-exporter/internal/writer/fs"
 	"github.com/clambin/grafana-exporter/internal/writer/git"
 	"github.com/spf13/viper"
-	"golang.org/x/exp/slog"
+	"log/slog"
 )
 
 func makeWriter() (*writer.Writer, error) {

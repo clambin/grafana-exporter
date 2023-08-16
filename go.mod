@@ -1,6 +1,6 @@
 module github.com/clambin/grafana-exporter
 
-go 1.18
+go 1.21
 
 require (
 	github.com/clambin/go-common/set v0.2.0
@@ -11,7 +11,6 @@ require (
 	github.com/spf13/cobra v1.7.0
 	github.com/spf13/viper v1.16.0
 	github.com/stretchr/testify v1.8.4
-	golang.org/x/exp v0.0.0-20230713183714-613f0c0eb8a1
 	gopkg.in/yaml.v3 v3.0.1
 )
 

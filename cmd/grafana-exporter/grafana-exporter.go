@@ -3,7 +3,7 @@ package main
 import (
 	"github.com/clambin/grafana-exporter/internal/cli"
 	"github.com/spf13/viper"
-	"golang.org/x/exp/slog"
+	"log/slog"
 	"os"
 )
 

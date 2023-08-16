@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"github.com/clambin/go-common/set"
 	gapi "github.com/grafana/grafana-api-golang-client"
-	"golang.org/x/exp/slog"
+	"log/slog"
 )
 
 type DashboardClient interface {
