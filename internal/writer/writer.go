@@ -9,8 +9,6 @@ import (
 )
 
 // StorageHandler interface for different storage backends
-//
-//go:generate mockery --name StorageHandler
 type StorageHandler interface {
 	Initialize() error
 	GetCurrent(string) ([]byte, error)
