@@ -16,12 +16,10 @@ data:
         readonly: false
         database: ""
         user: ""
-        password: ""
         orgid: 0
         isdefault: false
         basicauth: false
         basicauthuser: ""
-        basicauthpassword: ""
         jsondata: {}
         securejsondata: {}
       - id: 0
@@ -33,12 +31,10 @@ data:
         readonly: false
         database: ""
         user: ""
-        password: ""
         orgid: 0
         isdefault: false
         basicauth: false
         basicauthuser: ""
-        basicauthpassword: ""
         jsondata:
           postgresVersion: 1200
           sslmode: disable
