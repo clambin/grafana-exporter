@@ -10,17 +10,17 @@ import (
 
 var _ writer.StorageHandler = &Client{}
 
-type fileToStore struct {
+type file struct {
 	filename string
 	content  []byte
 }
 
 type Client struct {
-	files []fileToStore
+	files []file
 }
 
 func (c *Client) Initialize() error {
-	c.files = []fileToStore{}
+	c.files = nil
 	return nil
 }
 
@@ -29,12 +29,7 @@ func (c *Client) GetCurrent(s string) ([]byte, error) {
 }
 
 func (c *Client) Add(s string, bytes []byte) error {
-	dirname := path.Dir(s)
-	if err := os.MkdirAll(dirname, 0755); err != nil && !errors.Is(err, os.ErrExist) {
-		return fmt.Errorf("mkdir %s: %w", dirname, err)
-	}
-
-	c.files = append(c.files, fileToStore{filename: s, content: bytes})
+	c.files = append(c.files, file{filename: s, content: bytes})
 	return nil
 }
 
@@ -43,8 +38,12 @@ func (c *Client) IsClean() (bool, error) {
 }
 
 func (c *Client) Store(_ string) error {
-	for _, file := range c.files {
-		if err := os.WriteFile(file.filename, file.content, 0644); err != nil {
+	for _, f := range c.files {
+		dirname := path.Dir(f.filename)
+		if err := os.MkdirAll(dirname, 0755); err != nil && !errors.Is(err, os.ErrExist) {
+			return fmt.Errorf("mkdir %s: %w", dirname, err)
+		}
+		if err := os.WriteFile(f.filename, f.content, 0644); err != nil {
 			return err
 		}
 	}
