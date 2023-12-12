@@ -7,7 +7,7 @@ require (
 	github.com/go-git/go-billy/v5 v5.5.0
 	github.com/go-git/go-git/v5 v5.11.0
 	github.com/gosimple/slug v1.13.1
-	github.com/grafana/grafana-api-golang-client v0.26.0
+	github.com/grafana/grafana-api-golang-client v0.27.0
 	github.com/spf13/cobra v1.8.0
 	github.com/spf13/viper v1.18.1
 	github.com/stretchr/testify v1.8.4
