@@ -9,7 +9,7 @@ require (
 	github.com/gosimple/slug v1.13.1
 	github.com/grafana/grafana-api-golang-client v0.27.0
 	github.com/spf13/cobra v1.8.0
-	github.com/spf13/viper v1.18.1
+	github.com/spf13/viper v1.18.2
 	github.com/stretchr/testify v1.8.4
 	gopkg.in/yaml.v3 v3.0.1
 )
