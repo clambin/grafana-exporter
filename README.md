@@ -1,7 +1,6 @@
 # grafana-exporter
-![GitHub tag (latest by date)](https://img.shields.io/github/v/tag/clambin/grafana-exporter?color=green&label=Release&style=plastic)
-![Build)](https://github.com/clambin/grafana-exporter/workflows/Build/badge.svg)
-![Codecov](https://img.shields.io/codecov/c/gh/clambin/grafana-exporter?style=plastic)
-![Go Report Card](https://goreportcard.com/badge/github.com/clambin/grafana-exporter)
-![GitHub](https://img.shields.io/github/license/clambin/grafana-exporter?style=plastic)
-
+[![release](https://img.shields.io/github/v/tag/clambin/grafana-exporter?color=green&label=release&style=plastic)](https://github.com/clambin/grafana-exporter/releases)
+[![codecov](https://img.shields.io/codecov/c/gh/clambin/grafana-exporter?style=plastic)](https://app.codecov.io/gh/clambin/grafana-exporter)
+[![build](https://github.com/clambin/grafana-exporter/workflows/Build/badge.svg)](https://github.com/clambin/grafana-exporter/actions)
+[![go report card](https://goreportcard.com/badge/github.com/clambin/grafana-exporter)](https://goreportcard.com/report/github.com/clambin/grafana-exporter)
+[![license](https://img.shields.io/github/license/clambin/grafana-exporter?style=plastic)](LICENSE.md)
