@@ -3,7 +3,7 @@ module github.com/clambin/grafana-exporter
 go 1.21
 
 require (
-	github.com/clambin/go-common/set v0.4.2
+	github.com/clambin/go-common/set v0.4.3
 	github.com/go-git/go-billy/v5 v5.5.0
 	github.com/go-git/go-git/v5 v5.11.0
 	github.com/gosimple/slug v1.14.0

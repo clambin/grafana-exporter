@@ -19,13 +19,13 @@ func TestFetchDashboards(t *testing.T) {
 	}{
 		{
 			name:    "all folders",
-			folders: set.Create[string](),
+			folders: set.New[string](),
 			boards:  []string{"foo", "bar"},
 			titles:  []string{"board 1", "board 2"},
 		},
 		{
 			name:    "filters",
-			folders: set.Create("foo"),
+			folders: set.New("foo"),
 			boards:  []string{"foo"},
 			titles:  []string{"board 1"},
 		},

@@ -12,7 +12,7 @@ import (
 )
 
 func Dashboards(f fetcher.DashboardClient, w *writer.Writer, cfg Config) error {
-	dashboards, err := fetcher.FetchDashboards(f, set.Create(cfg.Folders...))
+	dashboards, err := fetcher.FetchDashboards(f, set.New(cfg.Folders...))
 	if err != nil {
 		return fmt.Errorf("grafana get dashboards: %w", err)
 	}
