@@ -1,3 +1,5 @@
 ignore:
   - "**/mocks/*.go"
   - "cmd/grafana-exporter/grafana-exporter.go"
+  - "internal/cli/*.go"
+  - "internal/writer/git/*.go"
