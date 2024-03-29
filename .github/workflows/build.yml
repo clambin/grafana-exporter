@@ -4,7 +4,7 @@ on:
   push:
     branches:
     - master
-    - git
+    - build
 
 jobs:
   test:
@@ -14,7 +14,7 @@ jobs:
   build:
     needs:
       - test
-    uses: clambin/workflows/.github/workflows/build.yaml@main
+    uses: clambin/workflows/.github/workflows/build.yaml@docker
     with:
-      target: grafana-exporter
+      image: ghcr.io/clambin/grafana-exporter
 
