@@ -19,7 +19,7 @@ func Dashboards(f fetcher.DashboardClient, w *writer.Writer, l *slog.Logger, cfg
 		return fmt.Errorf("grafana get dashboards: %w", err)
 	}
 
-	l.Debug("retrieved dashboards", "folders", len(dashboards))
+	l.Info("retrieved dashboards", "folders", len(dashboards))
 
 	var files map[string][]byte
 	if cfg.Direct {
@@ -32,7 +32,7 @@ func Dashboards(f fetcher.DashboardClient, w *writer.Writer, l *slog.Logger, cfg
 		return fmt.Errorf("export: %w", err)
 	}
 
-	l.Debug("created dashboard files", "folders", len(files))
+	l.Info("created dashboard files", "folders", len(files))
 
 	if err = w.Initialize(); err != nil {
 		return fmt.Errorf("write init: %w", err)
@@ -43,9 +43,9 @@ func Dashboards(f fetcher.DashboardClient, w *writer.Writer, l *slog.Logger, cfg
 		}
 	}
 
-	l.Debug("saving files", "folders", len(files))
+	l.Info("saving files", "folders", len(files))
 	start := time.Now()
-	defer func() { l.Debug("done saving files", "duration", time.Since(start)) }()
+	defer func() { l.Info("done saving files", "duration", time.Since(start)) }()
 	return w.Store("Automated export of Grafana dashboards")
 }
 
