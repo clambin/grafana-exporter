@@ -2,6 +2,7 @@ package main
 
 import (
 	"github.com/clambin/grafana-exporter/internal/cli"
+	"github.com/clambin/grafana-exporter/pkg/charmer"
 	"github.com/spf13/viper"
 	"log/slog"
 	"os"
@@ -16,6 +17,7 @@ func main() {
 	slog.Debug("debug mode")
 
 	if err := cli.RootCmd.Execute(); err != nil {
+		charmer.GetLogger(cli.RootCmd).Error("failed to run", "err", err)
 		os.Exit(1)
 	}
 }

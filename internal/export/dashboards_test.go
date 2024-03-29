@@ -10,6 +10,7 @@ import (
 	gapi "github.com/grafana/grafana-api-golang-client"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
+	"log/slog"
 	"os"
 	"path"
 	"path/filepath"
@@ -58,7 +59,7 @@ func TestExportDashboards(t *testing.T) {
 			f := fakeDashboardClient{}
 			w := writer.Writer{StorageHandler: &fs.Client{}, BaseDirectory: tmpdir}
 
-			err = export.Dashboards(&f, &w, tt.cfg)
+			err = export.Dashboards(&f, &w, slog.Default(), tt.cfg)
 			require.NoError(t, err)
 
 			for _, filename := range tt.filenames {

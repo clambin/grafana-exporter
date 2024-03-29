@@ -1,10 +1,12 @@
 package cli
 
 import (
+	"github.com/clambin/grafana-exporter/pkg/charmer"
 	"github.com/clambin/grafana-exporter/version"
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
 	"log/slog"
+	"os"
 )
 
 var (
@@ -12,6 +14,13 @@ var (
 	RootCmd        = &cobra.Command{
 		Use:   "grafana-exporter",
 		Short: "exports Grafana dashboards & datasources",
+		PersistentPreRun: func(cmd *cobra.Command, args []string) {
+			var opts slog.HandlerOptions
+			if viper.GetBool("debug") {
+				opts.Level = slog.LevelDebug
+			}
+			charmer.SetLogger(cmd, slog.New(slog.NewTextHandler(os.Stderr, &opts)))
+		},
 	}
 )
 

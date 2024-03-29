@@ -9,13 +9,17 @@ import (
 	"github.com/clambin/grafana-exporter/internal/fetcher"
 	"github.com/clambin/grafana-exporter/internal/writer"
 	"github.com/gosimple/slug"
+	"log/slog"
+	"time"
 )
 
-func Dashboards(f fetcher.DashboardClient, w *writer.Writer, cfg Config) error {
+func Dashboards(f fetcher.DashboardClient, w *writer.Writer, l *slog.Logger, cfg Config) error {
 	dashboards, err := fetcher.FetchDashboards(f, set.New(cfg.Folders...))
 	if err != nil {
 		return fmt.Errorf("grafana get dashboards: %w", err)
 	}
+
+	l.Debug("retrieved dashboards", "folders", len(dashboards))
 
 	var files map[string][]byte
 	if cfg.Direct {
@@ -24,8 +28,11 @@ func Dashboards(f fetcher.DashboardClient, w *writer.Writer, cfg Config) error {
 		files, err = exportDashboardsAsConfigMaps(dashboards, cfg)
 	}
 	if err != nil {
+		l.Warn("failed to export dashboards", "err", err)
 		return fmt.Errorf("export: %w", err)
 	}
+
+	l.Debug("created dashboard files", "folders", len(files))
 
 	if err = w.Initialize(); err != nil {
 		return fmt.Errorf("write init: %w", err)
@@ -35,6 +42,10 @@ func Dashboards(f fetcher.DashboardClient, w *writer.Writer, cfg Config) error {
 			return fmt.Errorf("write %s: %w", filename, err)
 		}
 	}
+
+	l.Debug("saving files", "folders", len(files))
+	start := time.Now()
+	defer func() { l.Debug("done saving files", "duration", time.Since(start)) }()
 	return w.Store("Automated export of Grafana dashboards")
 }
 

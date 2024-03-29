@@ -3,6 +3,7 @@ package cli
 import (
 	"fmt"
 	"github.com/clambin/grafana-exporter/internal/export"
+	"github.com/clambin/grafana-exporter/pkg/charmer"
 	gapi "github.com/grafana/grafana-api-golang-client"
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
@@ -18,7 +19,10 @@ var (
 	}
 )
 
-func exportDashboards(_ *cobra.Command, _ []string) error {
+func exportDashboards(cmd *cobra.Command, _ []string) error {
+	l := charmer.GetLogger(cmd)
+	l.Info("exporting dashboards")
+
 	w, err := makeWriter()
 	if err != nil {
 		return err
@@ -32,7 +36,7 @@ func exportDashboards(_ *cobra.Command, _ []string) error {
 		return fmt.Errorf("grafana connect: %w", err)
 	}
 
-	return export.Dashboards(c, w, export.Config{
+	return export.Dashboards(c, w, l, export.Config{
 		Direct:    viper.GetBool("direct"),
 		Namespace: viper.GetString("namespace"),
 		Folders:   strings.Split(viper.GetString("folders"), ","),
