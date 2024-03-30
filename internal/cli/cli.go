@@ -1,25 +1,20 @@
 package cli
 
 import (
-	"github.com/clambin/grafana-exporter/pkg/charmer"
+	"github.com/clambin/go-common/charmer"
 	"github.com/clambin/grafana-exporter/version"
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
 	"log/slog"
-	"os"
 )
 
 var (
 	configFilename string
-	RootCmd        = &cobra.Command{
+	RootCmd        = cobra.Command{
 		Use:   "grafana-exporter",
 		Short: "exports Grafana dashboards & datasources",
 		PersistentPreRun: func(cmd *cobra.Command, args []string) {
-			var opts slog.HandlerOptions
-			if viper.GetBool("debug") {
-				opts.Level = slog.LevelDebug
-			}
-			charmer.SetLogger(cmd, slog.New(slog.NewTextHandler(os.Stderr, &opts)))
+			charmer.SetTextLogger(cmd, viper.GetBool("debug"))
 		},
 	}
 )
@@ -29,25 +24,26 @@ func init() {
 	initArgs()
 }
 
+var args = charmer.Arguments{
+	"debug":         charmer.Argument{Default: false, Help: "Log debug messages"},
+	"direct":        charmer.Argument{Default: false, Help: "Export Grafana dashboards as JSON (default: write as k8s config maps)"},
+	"namespace":     charmer.Argument{Default: "default", Help: "Namespace for k8s config maps"},
+	"grafana.url":   charmer.Argument{Default: "http://localhost:3000", Help: "Grafana URL"},
+	"grafana.token": charmer.Argument{Default: "", Help: "Grafana API token (must have admin rights)"},
+	"out":           charmer.Argument{Default: ".", Help: "Output directory"},
+	"mode":          charmer.Argument{Default: "local", Help: "Output mode (local/git)"},
+}
+
 func initArgs() {
 	RootCmd.Version = version.BuildVersion
 
-	RootCmd.Flags().StringVarP(&configFilename, "config", "c", "", "Configuration file")
-	RootCmd.PersistentFlags().BoolP("debug", "d", false, "Log debug messages")
-	RootCmd.PersistentFlags().Bool("direct", false, "Write config files directory (default: write as k8s config maps)")
-	RootCmd.PersistentFlags().StringP("namespace", "n", "default", "Namespace for K8s config maps")
-	RootCmd.PersistentFlags().StringP("grafana.url", "u", "", "Grafana URL")
-	RootCmd.PersistentFlags().StringP("grafana.token", "t", "", "Grafana API token (must have admin access)")
-	RootCmd.PersistentFlags().StringP("out", "o", "", "Output directory")
-	RootCmd.PersistentFlags().StringP("mode", "m", "local", "Output mode (local/git)")
+	if err := charmer.SetPersistentFlags(&RootCmd, viper.GetViper(), args); err != nil {
+		panic("failed to set flags: " + err.Error())
+	}
 
-	_ = viper.BindPFlag("debug", RootCmd.PersistentFlags().Lookup("debug"))
-	_ = viper.BindPFlag("direct", RootCmd.PersistentFlags().Lookup("direct"))
-	_ = viper.BindPFlag("namespace", RootCmd.PersistentFlags().Lookup("namespace"))
-	_ = viper.BindPFlag("grafana.url", RootCmd.PersistentFlags().Lookup("grafana.url"))
-	_ = viper.BindPFlag("grafana.token", RootCmd.PersistentFlags().Lookup("grafana.token"))
-	_ = viper.BindPFlag("out", RootCmd.PersistentFlags().Lookup("out"))
-	_ = viper.BindPFlag("mode", RootCmd.PersistentFlags().Lookup("mode"))
+	if err := charmer.SetDefaults(viper.GetViper(), args); err != nil {
+		panic("failed to set default arguments: " + err.Error())
+	}
 
 	dashboardsCmd.Flags().StringP("folders", "f", "", "Dashboard folders to export")
 	_ = viper.BindPFlag("folders", dashboardsCmd.Flags().Lookup("folders"))

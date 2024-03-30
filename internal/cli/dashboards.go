@@ -2,8 +2,8 @@ package cli
 
 import (
 	"fmt"
+	"github.com/clambin/go-common/charmer"
 	"github.com/clambin/grafana-exporter/internal/export"
-	"github.com/clambin/grafana-exporter/pkg/charmer"
 	gapi "github.com/grafana/grafana-api-golang-client"
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
