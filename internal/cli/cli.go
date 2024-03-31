@@ -37,12 +37,9 @@ var args = charmer.Arguments{
 func initArgs() {
 	RootCmd.Version = version.BuildVersion
 
+	RootCmd.PersistentFlags().StringVarP(&configFilename, "config", "c", "", "Configuration file")
 	if err := charmer.SetPersistentFlags(&RootCmd, viper.GetViper(), args); err != nil {
 		panic("failed to set flags: " + err.Error())
-	}
-
-	if err := charmer.SetDefaults(viper.GetViper(), args); err != nil {
-		panic("failed to set default arguments: " + err.Error())
 	}
 
 	dashboardsCmd.Flags().StringP("folders", "f", "", "Dashboard folders to export")
@@ -66,6 +63,6 @@ func initConfig() {
 	viper.AutomaticEnv()
 
 	if err := viper.ReadInConfig(); err != nil {
-		slog.Error("failed to read config file", "err", err)
+		slog.Warn("failed to read config file", "err", err)
 	}
 }
