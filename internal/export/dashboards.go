@@ -34,11 +34,13 @@ func Dashboards(f fetcher.DashboardClient, w *writer.Writer, l *slog.Logger, cfg
 
 	l.Info("preparing to write dashboard files")
 
+	start := time.Now()
 	if err = w.Initialize(); err != nil {
 		return fmt.Errorf("write init: %w", err)
 	}
+	l.Info("preparation done", "duration", time.Since(start))
 
-	l.Info("writing dashboard files", "folders", len(files))
+	l.Info("writing dashboards", "folders", len(files))
 
 	for filename, content := range files {
 		if err = w.AddFile(filename, content); err != nil {
@@ -47,7 +49,7 @@ func Dashboards(f fetcher.DashboardClient, w *writer.Writer, l *slog.Logger, cfg
 	}
 
 	l.Info("storing files", "folders", len(files))
-	start := time.Now()
+	start = time.Now()
 	defer func() { l.Info("done storing files", "duration", time.Since(start)) }()
 	return w.Store("Automated export of Grafana dashboards")
 }
