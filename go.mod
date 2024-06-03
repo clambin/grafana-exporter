@@ -2,6 +2,8 @@ module github.com/clambin/grafana-exporter
 
 go 1.22.1
 
+toolchain go1.22.3
+
 require (
 	github.com/clambin/go-common/charmer v0.2.0
 	github.com/clambin/go-common/set v0.4.3
